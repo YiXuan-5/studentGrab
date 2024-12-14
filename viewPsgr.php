@@ -130,19 +130,43 @@ try {
             border: 1px solid #ddd;
             padding: 15px;
             border-radius: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: space-between;
         }
 
         .passenger-info {
             display: flex;
+            flex-direction: column;
             align-items: center;
             margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            width: calc(50% - 10px);
+            flex: 0 0 calc(50% - 10px);
+            min-width: 250px;
+            box-sizing: border-box;
         }
 
         .passenger-info img {
-            width: 50px;
-            height: 50px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
-            margin-right: 15px;
+            margin-bottom: 15px;
+            object-fit: cover;
+        }
+
+        .passenger-info .details {
+            width: 100%;
+            text-align: left;
+        }
+
+        .passenger-info .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
         }
 
         .no-results {
@@ -169,7 +193,9 @@ try {
             cursor: pointer; /* Change cursor to pointer for better usability */
         }
 
-
+        .passenger-info:last-child:nth-child(odd) {
+            margin-right: auto;
+        }
 
     </style>
 </head>
@@ -346,30 +372,43 @@ try {
                 return response.text();
             })
             .then(text => {
-                console.log('Raw response text:', text);
-                return JSON.parse(text);
+                console.log('Raw response text:', text); // Log the raw response
+                if (!text) {
+                    throw new Error('Empty response received');
+                }
+                try {
+                    const results = JSON.parse(text);
+                    console.log('Parsed results:', results);
+                    return results;
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    throw e;
+                }
             })
             .then(results => {
-                console.log('Parsed results:', results);
                 const psgrDetails = document.getElementById('psgrDetails');
                 const noResults = document.getElementById('noResults');
                 psgrDetails.innerHTML = '';
                 noResults.style.display = 'none';
 
-                if (results.length === 0 || results.error) {
+                if (!results || results.error || results.message || !Array.isArray(results) || results.length === 0) {
+                    console.log('No results condition met:', results);
                     noResults.style.display = 'block';
                 } else {
                     results.forEach(passenger => {
+                        console.log('Processing passenger:', passenger);
                         psgrDetails.innerHTML += `
                             <div class="passenger-info">
-                                <img src="${passenger.ProfilePicture}" alt="Profile Picture">
-                                <div>
+                                <img src="data:image/jpeg;base64,${passenger.ProfilePicture}" alt="Profile Picture">
+                                <div class="details">
                                     <strong>Passenger ID:</strong> ${passenger.PsgrID}<br>
                                     <strong>User ID:</strong> ${passenger.UserID}<br>
                                     <strong>Full Name:</strong> ${passenger.FullName}<br>
                                     <strong>Username:</strong> ${passenger.Username}<br>
-                                    <button class="button" onclick="editPassenger('${passenger.PsgrID}')">Edit</button>
-                                    <button class="button" onclick="deletePassenger('${passenger.PsgrID}')">Delete</button>
+                                    <div class="button-group">
+                                        <button class="button" onclick="editPassenger('${passenger.PsgrID}')">Edit</button>
+                                        <button class="button" onclick="deletePassenger('${passenger.PsgrID}')">Delete</button>
+                                    </div>
                                 </div>
                             </div>
                         `;

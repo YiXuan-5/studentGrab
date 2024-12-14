@@ -2,8 +2,25 @@
 session_start();
 include 'dbConnection.php';
 
+// Enable error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// Set header to return JSON
+header('Content-Type: application/json');
+
 // Get the JSON data from the request
-$data = json_decode(file_get_contents('php://input'), true);
+$rawData = file_get_contents('php://input');
+error_log("Raw input data: " . $rawData); // Log raw input
+
+$data = json_decode($rawData, true);
+error_log("Decoded data: " . print_r($data, true)); // Log decoded data
+
+// Validate input data
+if (!$data || !isset($data['criteria']) || !isset($data['psgrID'])) {
+    echo json_encode(['error' => 'Invalid input data']);
+    exit;
+}
 
 // Prepare the SQL query based on the criteria
 $criteria = $data['criteria'];
@@ -12,20 +29,53 @@ $results = [];
 
 try {
     if ($criteria === 'psgrID' && !empty($passengerID)) {
-        $stmt = $connMe->prepare("SELECT * FROM PASSENGER WHERE PsgrID = ?");
+        $query = "
+            SELECT p.PsgrID, p.UserID, p.Username, 
+                   u.FullName, u.ProfilePicture
+            FROM PASSENGER p
+            INNER JOIN USER u ON p.UserID = u.UserID
+            WHERE p.PsgrID = ?
+        ";
+        error_log("SQL Query: " . $query); // Log the SQL query
+        
+        $stmt = $connMe->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connMe->error);
+        }
+        
         $stmt->bind_param("s", $passengerID);
+        error_log("Searching for PsgrID: " . $passengerID); // Log the passenger ID
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+        
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            // Convert ProfilePicture to base64 if it's a blob
+            if (isset($row['ProfilePicture'])) {
+                $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
+            }
+            $results[] = $row;
+        }
+        
+        error_log("Query results: " . print_r($results, true)); // Log the results
+
+        if (empty($results)) {
+            echo json_encode(['message' => 'No results found']);
+            exit;
+        }
     }
-    // Add more conditions for other criteria as needed
-
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    while ($row = $result->fetch_assoc()) {
-        $results[] = $row; // Collect results
-    }
-
-    echo json_encode($results); // Return results as JSON
+    
+    echo json_encode($results);
+    
 } catch (Exception $e) {
+    error_log("Error occurred: " . $e->getMessage()); // Log any errors
     echo json_encode(['error' => $e->getMessage()]);
+} finally {
+    if (isset($stmt)) {
+        $stmt->close();
+    }
 }
 ?> 
