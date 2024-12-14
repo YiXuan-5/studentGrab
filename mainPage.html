@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTeM Peer Ride</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+        .container {
+            text-align: center;
+            max-width: 700px;
+            margin: auto;
+            border: 2px solid #8bc34a;
+            border-radius: 10px;
+            padding: 30px;
+            background-color: #ffffff;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7);
+        }
+        .header {
+            margin-bottom: 10px;
+        }
+        .logo {
+            width: 250px;
+            height: auto;
+            margin-top: 0;
+        }
+        h1 {
+            font-size: 60px;
+            margin: 0;
+            font-family: "Comic Sans MS", cursive, sans-serif;
+            background: #000000; 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hint {
+            margin: 20px 0;
+            font-size: 18px;
+            color: #757575;
+        }
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 18px;
+            text-decoration: none;
+            color: white;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 200px;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+        .button:hover {
+            background-color: #388e3c;
+            transform: scale(1.05); /* Slightly enlarges the button on hover */
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            width: 300px;
+            text-align: center;
+            border-radius: 10px;
+        }
+        .close {
+            float: right;
+            font-size: 28px;
+            cursor: pointer;
+        }
+        .submit-button {
+            background-color: #4caf50; /* Green background */
+            color: white; /* White text */
+            border: none; /* Removes border */
+            padding: 5px 10px; /* Adds padding inside the button */
+            font-size: 14px; /* Sets font size */
+            border-radius: 5px; /* Adds rounded corners */
+            cursor: pointer; /* Changes cursor to pointer on hover */
+            font-family: Arial, sans-serif; /* Matches font with other buttons */
+            text-align: center; /* Centers the text */
+            transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth effects for hover */
+        }
+
+        /* Hover state */
+        .submit-button:hover {
+            background-color: #388e3c; /* Darker green on hover */
+            color: #ffffff; /* Ensures the text color remains white */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to</h1>
+            <img src="Image/logo" alt="UTeM Peer Ride Logo" class="logo">
+        </div>
+        <p class="hint">Please choose your role to enter the system:</p>
+        <div class="buttons">
+            <a href="loginPsgr.php" class="button">Passenger</a>
+            <a href="loginDri.php" class="button">Driver</a>
+            <a href="#" class="button" id="adminBtn">Admin</a> <!-- # indicates that the link doesn’t point to any specific URL or destination.-->
+        </div>
+    </div>
+
+    <!-- Modal for Admin Enrollment Key -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Enter Admin Key:</h2>
+            <input type="password" id="enrollKey" placeholder="Enrollment Key" autocomplete="off"> <!--disables the browser's autofill feature for previously saved input values,-->
+            <button onclick="validateKey()" class="submit-button">Submit</button>
+            <p id="errorMsg" style="color: red; display: none;">Wrong enrollment key. Try again.</p>
+        </div>
+    </div>
+
+    <script>
+        // Get elements
+        var modal = document.getElementById("adminModal");
+        var btn = document.getElementById("adminBtn");
+        var span = document.getElementsByClassName("close")[0];
+        var errorMsg = document.getElementById("errorMsg");
+
+        // When user clicks the Admin button, open the modal
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+
+        // When user clicks the close button, close the modal
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        // When user clicks anywhere outside the modal, close it
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        // Validate the enrollment key
+        function validateKey() {
+            var enteredKey = document.getElementById("enrollKey").value;
+            var validKey = "AdminPower111"; // The correct enrollment key
+
+            if (enteredKey === validKey) {
+                window.location.href = "loginAdm.php"; // Redirect to admin login page
+            } else {
+                errorMsg.style.display = "block"; // Show error message
+            }
+        }
+    </script>
+</body>
+</html>
