@@ -12,7 +12,7 @@ $results = [];
 
 try {
     if ($criteria === 'psgrID' && !empty($passengerID)) {
-        $stmt = $connMe->prepare("SELECT u.FullName, u.ProfilePicture, p.PsgrID, p.Username, u.UserID FROM PASSENGER p JOIN USER u ON p.UserID = u.UserID WHERE p.PsgrID = ? and u.UserID = ?");
+        $stmt = $connMe->prepare("SELECT * FROM PASSENGER WHERE PsgrID = ?");
         $stmt->bind_param("s", $passengerID);
     }
     // Add more conditions for other criteria as needed
