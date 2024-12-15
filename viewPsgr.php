@@ -1,4 +1,4 @@
-    <?php
+<?php
     session_start();
     include 'dbConnection.php';
 
@@ -133,21 +133,18 @@
                 display: flex;
                 flex-wrap: wrap;
                 gap: 20px;
-                justify-content: space-between;
             }
 
             .passenger-info {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                margin-bottom: 15px;
+                flex: 0 1 calc(50% - 20px);
+                min-width: 250px;
+                margin: 0;
                 border: 1px solid #ddd;
                 padding: 15px;
                 border-radius: 8px;
-                width: calc(50% - 10px);
-                flex: 0 0 calc(50% - 10px);
-                min-width: 250px;
-                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
 
             .passenger-info img {
@@ -226,6 +223,13 @@
                 flex-grow: 1;
             }
 
+            #psgrDetails {
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 20px;
+            }
+
         </style>
     </head>
     <body>
@@ -289,7 +293,7 @@
                         
                         <div id="usernameField" style="display: none;">
                                 <label for="username">Username:</label>
-                                <input type="text" id="username">
+                                <input type="text" id="username" autocomplete="off">
                         </div>
 
                         <div id="genderField" style="display: none;">
@@ -306,17 +310,17 @@
 
                         <div id="fullNameField" style="display: none;">
                             <label for="fullName">Full Name:</label>
-                            <input type="text" id="fullName">
+                            <input type="text" id="fullName" autocomplete="off">
                         </div>
 
                         <div id="pickupLocationField" style="display: none;">
                             <label for="pickupLocation">Favourite Pick Up Location:</label>
-                            <input type="text" id="pickupLocation">
+                            <input type="text" id="pickupLocation" autocomplete="off">
                         </div>
 
                         <div id="dropoffLocationField" style="display: none;">
                             <label for="dropoffLocation">Favourite Drop Off Location:</label>
-                            <input type="text" id="dropoffLocation">
+                            <input type="text" id="dropoffLocation" autocomplete="off">
                         </div>
                     </div>
 
@@ -372,8 +376,8 @@
                 const psgrID = document.getElementById('psgrID').value;
                 const username = document.getElementById('username').value;
                 const fullName = document.getElementById('fullName').value;
-                const pickupLocation = document.getElementById('pickupLocation').value;
-                const dropoffLocation = document.getElementById('dropoffLocation').value;
+                const favPickUpLoc = document.getElementById('pickupLocation').value;
+                const favDropOffLoc = document.getElementById('dropoffLocation').value;
                 const role = document.querySelector('input[name="role"]:checked') ? document.querySelector('input[name="role"]:checked').value : '';
                 const gender = document.querySelector('input[name="gender"]:checked') ? document.querySelector('input[name="gender"]:checked').value : '';
                 
@@ -383,8 +387,8 @@
                     psgrID: psgrID,
                     username: username,
                     fullName: fullName,
-                    pickupLocation: pickupLocation,
-                    dropoffLocation: dropoffLocation,
+                    favPickUpLoc: favPickUpLoc,
+                    favDropOffLoc: favDropOffLoc,
                     role: role,
                     gender: gender
                 });
@@ -394,8 +398,8 @@
                     psgrID: psgrID,
                     username: username,
                     fullName: fullName,
-                    pickupLocation: pickupLocation,
-                    dropoffLocation: dropoffLocation,
+                    favPickUpLoc: favPickUpLoc,
+                    favDropOffLoc: favDropOffLoc,
                     role: role,
                     gender: gender
                 };

@@ -26,6 +26,21 @@ if (!$data || !isset($data['criteria']) || !isset($data['psgrID'])) {
 $criteria = $data['criteria'];
 $passengerID = $data['psgrID'];
 $role = strtoupper($data['role']);
+$username = $data['username'];
+
+//Convert gender value in input field to M or F to ease in searching database
+if ($data['gender'] === 'Male') {
+    $gender = 'M';
+} else if ($data['gender'] === 'Female') {
+    $gender = 'F';
+} else {
+    $gender = '';
+}
+
+$fullName = strtoupper($data['fullName']);
+$favPickUpLoc = strtoupper($data['favPickUpLoc']);
+$favDropOffLoc = strtoupper($data['favDropOffLoc']);
+
 $results = [];
 
 try {
@@ -74,6 +89,7 @@ try {
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             WHERE p.Role = ?
+            ORDER BY p.PsgrID ASC
             ";
         error_log("SQL Query: " . $query); // Log the SQL query
 
@@ -84,6 +100,196 @@ try {
         
         $stmt->bind_param("s", $role);
         error_log("Searching for Role: " . $role); // Log the role
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            // Convert ProfilePicture to base64 if it's a blob
+            if (isset($row['ProfilePicture'])) {
+                $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
+            }
+            $results[] = $row;
+        }
+        
+        error_log("Query results: " . print_r($results, true)); // Log the results
+
+        if (empty($results)) {
+            echo json_encode(['message' => 'No results found']);
+            exit;
+        }
+    }else if ($criteria === 'username' && !empty($username)) {
+        $query = "
+            SELECT p.PsgrID, p.UserID, p.Username, 
+                    u.FullName, u.ProfilePicture
+            FROM PASSENGER p
+            INNER JOIN USER u ON p.UserID = u.UserID
+            WHERE UPPER(p.Username) LIKE UPPER(CONCAT('%', ?, '%'))
+            ORDER BY p.Username ASC
+            ";
+        error_log("SQL Query: " . $query); // Log the SQL query
+
+        $stmt = $connMe->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connMe->error);
+        }
+        
+        $stmt->bind_param("s", $username);
+        error_log("Searching for Username: " . $username); // Log the username
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            // Convert ProfilePicture to base64 if it's a blob
+            if (isset($row['ProfilePicture'])) {
+                $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
+            }
+            $results[] = $row;
+        }
+        
+        error_log("Query results: " . print_r($results, true)); // Log the results
+
+        if (empty($results)) {
+            echo json_encode(['message' => 'No results found']);
+            exit;
+        }
+    }else if ($criteria === 'gender' && !empty($gender)) {
+        $query = "
+            SELECT p.PsgrID, p.UserID, p.Username, 
+                   u.FullName, u.ProfilePicture
+            FROM PASSENGER p
+            INNER JOIN USER u ON p.UserID = u.UserID
+            WHERE u.Gender = ?
+            ORDER BY p.PsgrID ASC
+            ";
+        error_log("SQL Query: " . $query); // Log the SQL query
+
+        $stmt = $connMe->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connMe->error);
+        }
+        
+        $stmt->bind_param("s", $gender);
+        error_log("Searching for Gender: " . $gender); // Log the gender
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            // Convert ProfilePicture to base64 if it's a blob
+            if (isset($row['ProfilePicture'])) {
+                $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
+            }
+            $results[] = $row;
+        }
+        
+        error_log("Query results: " . print_r($results, true)); // Log the results
+
+        if (empty($results)) {
+            echo json_encode(['message' => 'No results found']);
+            exit;
+        }
+    }else if ($criteria === 'fullName' && !empty($fullName)) {
+        $query = "
+            SELECT p.PsgrID, p.UserID, p.Username, 
+                    u.FullName, u.ProfilePicture
+            FROM PASSENGER p
+            INNER JOIN USER u ON p.UserID = u.UserID
+            WHERE u.FullName LIKE CONCAT('%', ?, '%')
+            ORDER BY u.FullName ASC
+            ";
+        error_log("SQL Query: " . $query); // Log the SQL query
+
+        $stmt = $connMe->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connMe->error);
+        }
+        
+        $stmt->bind_param("s", $fullName);
+        error_log("Searching for Full Name: " . $fullName); // Log the fullname
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            // Convert ProfilePicture to base64 if it's a blob
+            if (isset($row['ProfilePicture'])) {
+                $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
+            }
+            $results[] = $row;
+        }
+        
+        error_log("Query results: " . print_r($results, true)); // Log the results
+
+        if (empty($results)) {
+            echo json_encode(['message' => 'No results found']);
+            exit;
+        }
+    }else if ($criteria === 'pickupLocation' && !empty($favPickUpLoc)) {
+        $query = "
+            SELECT p.PsgrID, p.UserID, p.Username, 
+                    u.FullName, u.ProfilePicture
+            FROM PASSENGER p
+            INNER JOIN USER u ON p.UserID = u.UserID
+            WHERE p.FavPickUpLoc LIKE CONCAT('%', ?, '%')
+            ORDER BY p.PsgrID ASC
+            ";
+        error_log("SQL Query: " . $query); // Log the SQL query
+
+        $stmt = $connMe->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connMe->error);
+        }
+        
+        $stmt->bind_param("s", $favPickUpLoc);
+        error_log("Searching for Favourite Pick Up Location: " . $favPickUpLoc); // Log the favourite pickup location
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            // Convert ProfilePicture to base64 if it's a blob
+            if (isset($row['ProfilePicture'])) {
+                $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
+            }
+            $results[] = $row;
+        }
+        
+        error_log("Query results: " . print_r($results, true)); // Log the results
+
+        if (empty($results)) {
+            echo json_encode(['message' => 'No results found']);
+            exit;
+        }
+    }else if ($criteria === 'dropoffLocation' && !empty($favDropOffLoc)) {
+        $query = "
+            SELECT p.PsgrID, p.UserID, p.Username, 
+                    u.FullName, u.ProfilePicture
+            FROM PASSENGER p
+            INNER JOIN USER u ON p.UserID = u.UserID
+            WHERE p.FavDropOffLoc LIKE CONCAT('%', ?, '%')
+            ORDER BY p.PsgrID ASC
+            ";
+        error_log("SQL Query: " . $query); // Log the SQL query
+
+        $stmt = $connMe->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connMe->error);
+        }
+        
+        $stmt->bind_param("s", $favDropOffLoc);
+        error_log("Searching for Favourite Drop Off Location: " . $favDropOffLoc); // Log the favourite drop off location
         if (!$stmt->execute()) {
             throw new Exception("Execute failed: " . $stmt->error);
         }
