@@ -35,7 +35,7 @@ try {
 
     // Get active vehicle information
     $stmt = $connMe->prepare("
-        SELECT VhcID, Model, PlateNo, Color, AvailableSeat, YearManufacture, VehicleStatus, VhcPicture
+        SELECT VhcID, Model, PlateNo, Color, AvailableSeat, YearManufacture, VehicleStatus
         FROM VEHICLE 
         WHERE DriverID = ? AND VehicleStatus = 'ACTIVE'
         LIMIT 1
@@ -47,7 +47,7 @@ try {
 
     // Get all other vehicles
     $stmt = $connMe->prepare("
-        SELECT VhcID, Model, PlateNo, Color, AvailableSeat, YearManufacture, VehicleStatus, VhcPicture
+        SELECT VhcID, Model, PlateNo, Color, AvailableSeat, YearManufacture, VehicleStatus
         FROM VEHICLE 
         WHERE DriverID = ? AND VehicleStatus = 'INACTIVE'
         ORDER BY VhcID DESC

@@ -230,15 +230,74 @@
             flex-wrap: wrap;
             gap: 20px;
         }
+
+        .nav-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #4caf50;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .nav-dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content:hover,
+        .nav-dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .nav-dropdown > a:focus + .dropdown-content {
+            display: block;
+        }
+
+        .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #388e3c;
+            border-radius: 5px;
+        }
+
+        .nav-center {
+            display: flex;
+            gap: 15px;
+        }
     </style>
 </head>
 <body>
     <!-- Navigation Bar -->
     <nav class="navbar">
-        <a href="homePageAdm.php" class="nav-item">
-            <i class="fas fa-home"></i>
-            Home
-        </a>
+        <div class="nav-center">
+            <a href="homePageAdm.php" class="nav-item">
+                <i class="fas fa-home"></i>
+                Home
+            </a>
+            <div class="nav-dropdown">
+                <a href="userMgmt.php" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    User Management
+                </a>
+                <div class="dropdown-content">
+                    <a href="viewPsgr.php">Passenger</a>
+                    <a href="viewDri.php">Driver</a>
+                </div>
+            </div>
+        </div>
         <div class="nav-items right">
             <a href="profileAdm.php" class="nav-item">
                 <i class="fas fa-user"></i>
