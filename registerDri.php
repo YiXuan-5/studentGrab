@@ -406,7 +406,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             
             // Set up license expiry date max 15 years
             const maxLicenseDate = new Date(today);
-            maxLicenseDate.setFullYear(today.getFullYear() + 15);
+            maxLicenseDate.setFullYear(today.getFullYear() + 10);
             
             // Set up sticker expiry date max 5 years
             const maxStickerDate = new Date(today);

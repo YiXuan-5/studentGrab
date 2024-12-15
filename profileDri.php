@@ -1025,7 +1025,7 @@ try {
                     <input type="date" id="licenseExpDate" name="licenseExpDate" 
                            value="<?php echo date('Y-m-d', strtotime($userData['LicenseExpDate'])); ?>" 
                            min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>"
-                           max="<?php echo date('Y-m-d', strtotime('+15 years')); ?>"
+                           max="<?php echo date('Y-m-d', strtotime('+10 years')); ?>"
                            required>
                 </div>
 
