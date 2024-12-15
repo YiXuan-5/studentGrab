@@ -25,6 +25,7 @@ if (!$data || !isset($data['criteria']) || !isset($data['psgrID'])) {
 // Prepare the SQL query based on the criteria
 $criteria = $data['criteria'];
 $passengerID = $data['psgrID'];
+$role = strtoupper($data['role']);
 $results = [];
 
 try {
@@ -50,6 +51,43 @@ try {
             throw new Exception("Execute failed: " . $stmt->error);
         }
         
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            // Convert ProfilePicture to base64 if it's a blob
+            if (isset($row['ProfilePicture'])) {
+                $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
+            }
+            $results[] = $row;
+        }
+        
+        error_log("Query results: " . print_r($results, true)); // Log the results
+
+        if (empty($results)) {
+            echo json_encode(['message' => 'No results found']);
+            exit;
+        }
+    }else if ($criteria === 'role' && !empty($role)) {
+        $query = "
+            SELECT p.PsgrID, p.UserID, p.Username, 
+                   u.FullName, u.ProfilePicture
+            FROM PASSENGER p
+            INNER JOIN USER u ON p.UserID = u.UserID
+            WHERE p.Role = ?
+            ";
+        error_log("SQL Query: " . $query); // Log the SQL query
+
+        $stmt = $connMe->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connMe->error);
+        }
+        
+        $stmt->bind_param("s", $role);
+        error_log("Searching for Role: " . $role); // Log the role
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
         $result = $stmt->get_result();
         
         while ($row = $result->fetch_assoc()) {

@@ -222,6 +222,7 @@
             }
 
             .detail-value {
+                /*flex-grow:1 means the value will grow to fill the remaining space*/
                 flex-grow: 1;
             }
 
@@ -264,6 +265,7 @@
                         <div id="psgrIDField" style="display: none;">
                             <label for="psgrID">Passenger ID:</label>
                             <select id="psgrID">
+                                <!--Loop through the array of passenger IDs and display them as options in the dropdown-->
                                 <?php foreach ($psgrIDs as $id): ?>
                                     <option value="<?php echo $id; ?>"><?php echo $id; ?></option>
                                 <?php endforeach; ?>
@@ -368,23 +370,34 @@
             function searchPassengers() {
                 const criteria = document.getElementById('criteria').value;
                 const psgrID = document.getElementById('psgrID').value;
+                const username = document.getElementById('username').value;
+                const fullName = document.getElementById('fullName').value;
+                const pickupLocation = document.getElementById('pickupLocation').value;
+                const dropoffLocation = document.getElementById('dropoffLocation').value;
+                const role = document.querySelector('input[name="role"]:checked') ? document.querySelector('input[name="role"]:checked').value : '';
+                const gender = document.querySelector('input[name="gender"]:checked') ? document.querySelector('input[name="gender"]:checked').value : '';
                 
                 // Log all data being sent
                 console.log('Sending search data:', {
                     criteria: criteria,
-                    psgrID: psgrID
+                    psgrID: psgrID,
+                    username: username,
+                    fullName: fullName,
+                    pickupLocation: pickupLocation,
+                    dropoffLocation: dropoffLocation,
+                    role: role,
+                    gender: gender
                 });
 
                 const data = {
                     criteria: criteria,
                     psgrID: psgrID,
-                    // Include other fields even if they're empty
-                    username: document.getElementById('username').value,
-                    fullName: document.getElementById('fullName').value,
-                    pickupLocation: document.getElementById('pickupLocation').value,
-                    dropoffLocation: document.getElementById('dropoffLocation').value,
-                    role: document.querySelector('input[name="role"]:checked') ? document.querySelector('input[name="role"]:checked').value : '',
-                    gender: document.querySelector('input[name="gender"]:checked') ? document.querySelector('input[name="gender"]:checked').value : ''
+                    username: username,
+                    fullName: fullName,
+                    pickupLocation: pickupLocation,
+                    dropoffLocation: dropoffLocation,
+                    role: role,
+                    gender: gender
                 };
 
                 fetch('fetchPsgrs.php', {
@@ -419,10 +432,12 @@
                     psgrDetails.innerHTML = '';
                     noResults.style.display = 'none';
 
+                    // Check if the results are empty or not an array
                     if (!results || results.error || results.message || !Array.isArray(results) || results.length === 0) {
                         console.log('No results condition met:', results);
                         noResults.style.display = 'block';
                     } else {
+                        // If results is an array, process each passenger
                         results.forEach(passenger => {
                             // Format the full name to capitalize first letter of each word
                             const formattedFullName = passenger.FullName
@@ -432,6 +447,7 @@
                                 .join(' '); // .join(' ') means join the array of words back into a string
 
                             console.log('Processing passenger:', passenger);
+                            //Display the passenger details in the result container
                             psgrDetails.innerHTML += `
                                 <div class="passenger-info">
                                     <img src="data:image/jpeg;base64,${passenger.ProfilePicture}" alt="Profile Picture">
