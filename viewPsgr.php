@@ -473,7 +473,7 @@
                                             <span class="detail-value">${passenger.Username}</span>
                                         </div>
                                         <div class="button-group">
-                                            <button class="button" onclick="editPassenger('${passenger.PsgrID}')">
+                                            <button class="button" onclick="window.location.href='editPsgr.php?passengerID=${passenger.PsgrID}'">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
                                             <button class="button" onclick="deletePassenger('${passenger.PsgrID}')">
@@ -490,11 +490,6 @@
                     console.error('Full error details:', error);
                     document.getElementById('noResults').style.display = 'block';
                 });
-            }
-
-            function editPassenger(psgrID) {
-                // Implement edit functionality
-                alert('Edit passenger: ' + psgrID);
             }
 
             function deletePassenger(psgrID) {
