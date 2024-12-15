@@ -305,6 +305,21 @@ if ($passengerID) {
             position: relative;
             width: 100%;  /* Make password field take full width of its wrapper */
         }
+
+        .action-buttons {
+            margin-top: 20px;
+        }
+
+        .delete-btn {
+            background-color: white;
+            color: #ff4444;
+            border: 2px solid #ff4444;
+            padding: 8px 15px;
+        }
+
+        .delete-btn:hover {
+            background-color: #ffebeb;
+        }
     </style>
 </head>
 <body>

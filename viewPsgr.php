@@ -454,7 +454,7 @@
                             //Display the passenger details in the result container
                             psgrDetails.innerHTML += `
                                 <div class="passenger-info">
-                                    <img src="data:image/jpeg;base64,${passenger.ProfilePicture}" alt="Profile Picture">
+                                    <img src="${passenger.ProfilePicture ? 'data:image/jpeg;base64,' + passenger.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
                                     <div class="details">
                                         <div class="detail-row">
                                             <span class="detail-label"><strong>Passenger ID:</strong></span>
@@ -476,7 +476,7 @@
                                             <button class="button" onclick="window.location.href='editPsgr.php?passengerID=${passenger.PsgrID}'">
                                                 <i class="fas fa-edit"></i> Edit
                                             </button>
-                                            <button class="button" onclick="deletePassenger('${passenger.PsgrID}')">
+                                            <button class="button" onclick="deletePassenger('${passenger.PsgrID}', '${passenger.UserID}')">
                                                 <i class="fas fa-trash"></i> Delete
                                             </button>
                                         </div>
@@ -492,9 +492,32 @@
                 });
             }
 
-            function deletePassenger(psgrID) {
-                // Implement delete functionality
-                alert('Delete passenger: ' + psgrID);
+            function deletePassenger(psgrID, userID) {
+                if (confirm('Are you sure you want to delete this passenger account? This action cannot be undone.')) {
+                    fetch('deleteAccountPsgrByAdm.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            psgrId: psgrID,
+                            userId: userID
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert(data.message);
+                            location.reload(); // Refresh the page to show updated list
+                        } else {
+                            alert('Failed to delete account: ' + data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while deleting the account');
+                    });
+                }
             }
         </script>
     </body>
