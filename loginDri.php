@@ -241,7 +241,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 messageDiv.style.color = "green";
                 //
                 setTimeout(() => {
-                    window.location.href = "profileDri.php"; // Redirect to next page
+                    
+                    window.location.href = "https://192.168.193.55/workshop2/uprs/homePageDriv.php"; // Redirect to next page
+                    
+                    /*window.location.href = "profileDri.php";*/
                 }, 2000); //2000ms = 2s to wait bfr move to next page
             } else {
                 // Handle error

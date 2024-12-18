@@ -225,7 +225,7 @@ $connMe->close();
         <div class="hero-content">
             <h1>Welcome, Administrator<br><?php echo ucwords(strtolower($userData['FullName'])); ?> 😊</h1>
             <p>Access the ride management page where you can monitor and manage all ride details</p>
-            <a href="rideMgmt.php" class="get-started-btn">Get Started</a>
+            <a href="https://192.168.193.55/workshop2/uprs/homePagePass.php" class="get-started-btn">Get Started</a>
         </div>
     </section>
 
@@ -254,7 +254,7 @@ $connMe->close();
                 <img src="https://img.freepik.com/premium-vector/application-rating-customer-user-reviews-5-stars-website-ranking-system-positive-feedback-evaluate-votes-flat-vector-illustration_128772-845.jpg" 
                      alt="Feedback Management" 
                      class="feature-image">
-                <a href="FRMgmt.php" class="feature-btn" style="white-space: nowrap;">Manage Feedback/Rating</a>
+                <a href="https://192.168.193.196/adminFeedback.php" class="feature-btn" style="white-space: nowrap;">Manage Feedback/Rating</a>
             </div>
         </div>
     </section>
