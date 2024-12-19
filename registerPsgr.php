@@ -49,7 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 'userType' => $row['UserType'],
                 'birthDate' => $row['BirthDate'],
                 'gender' => $row['Gender'],
-                'emailSecCode' => $row['EmailSecCode']
+                'emailSecCode' => $row['EmailSecCode'],
+                'secQues1' => $row['SecQues1'],
+                'secQues2' => $row['SecQues2']
             ];
         }
     } else {
@@ -203,6 +205,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             border-radius: 8px;
             margin-top: 20px;
         }
+        .question-text {
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -283,6 +288,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <input type="radio" id="genderFemale" name="gender" value="female"> Female
                         </label>
                     </div>
+                </div>
+
+                <!-- Security Question -->
+                <div class="form-group">
+                    <label>Security Question 1:</label>
+                    <label class="question-text">What is your favourite food?</label>
+                </div>
+                <div class="form-group">
+                    <label for="secQues1">Your Answer:</label>
+                    <input type="text" id="secQues1" name="secQues1" maxLength="30" required autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label>Security Question 2:</label>
+                    <label class="question-text">What first city did you visited on your vacation?</label>
+                </div>
+                <div class="form-group">
+                    <label for="secQues2">Your Answer:</label>
+                    <input type="text" id="secQues2" name="secQues2" maxLength="50" required autocomplete="off">
                 </div>
             </div>
 
@@ -462,7 +486,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
 
             } else if (data.status === "exists_none") {
-                emailError.style.color = "green"; // Green for 'exists_user'
+                emailError.style.color = "green"; // Green for 'exists_none'
 
                 //Show all textfield
                 dividerSection.style.display = "block"; 
@@ -621,19 +645,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         for (const [key, value] of formData.entries()) {
             console.log(key, value); // This will log each form field's name and value
         
+
+            // Special handling for security questions
+            if (key === 'secQues1') {
+                confirmationMessage += `SECURITY QUESTION 1: ${value}\n\n`;
+                continue;
+            }
+            if (key === 'secQues2') {
+                confirmationMessage += `SECURITY QUESTION 2: ${value}\n\n`;
+                continue;
+            }
+
             // Find the associated label using `for` attribute
             //registerForm refers to the actual form element (the DOM node) that selected (like label)
             const label = registerForm.querySelector(`label[for="${key}"]`);
 
             // Get the label's text or fallback to the key if label is missing
             const labelText = label ? label.textContent : key;
-
+        
             // Convert the label text and value to uppercase
             const upperCaseLabel = labelText.toUpperCase();
             //use "let" instead of const cuz further will change the value
             let inputValue = value;
-
-            console.log("inputValue:", inputValue);
 
             //in order to make current role concat with what the user register now
             if(upperCaseLabel === "TYPE OF USER:") {
@@ -642,12 +675,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     inputValue = inputValue.concat(" ", "PASSENGER");
                 } else {
                     // For new users, just set as PASSENGER
-                inputValue = "PASSENGER";
+                    inputValue = "PASSENGER";
                 }
             }
             
-            //Inputs except password and username will make it in upper case
-            if(upperCaseLabel != "PASSWORD:" && upperCaseLabel != "USERNAME:" && upperCaseLabel != "EMAIL'S SECURITY CODE:"){
+            //Inputs except password, username, email's security code will make it in upper case
+            if(upperCaseLabel != "PASSWORD:" && 
+               upperCaseLabel != "USERNAME:" && 
+               upperCaseLabel != "EMAIL'S SECURITY CODE:") {
                 inputValue = inputValue.toUpperCase();
             }
 

@@ -9,7 +9,10 @@ if (!isset($_SESSION['UserID']) || !isset($_SESSION['AdminID'])) {
     exit;
 }
 
-$data = json_decode(file_get_contents('php://input'), true);
+$inputData = file_get_contents('php://input');
+error_log("Received data: " . $inputData);
+$data = json_decode($inputData, true);
+error_log("Decoded data: " . print_r($data, true));
 
 try {
     $connMe->begin_transaction();
@@ -42,34 +45,52 @@ try {
                 }
             }
 
-            // Update USER table if email or security code changed
-            if ($data['email'] || $data['securityCode']) {
-                $updates = [];
-                $params = [];
-                $types = "";
+            // Initialize arrays for updates
+            $updates = [];
+            $params = [];
+            $types = "";
 
-                if ($data['email']) {
-                    $updates[] = "EmailAddress = UPPER(?)";
-                    $params[] = $data['email'];
-                    $types .= "s";
+            // Add email if provided
+            if ($data['email']) {
+                $updates[] = "EmailAddress = UPPER(?)";
+                $params[] = $data['email'];
+                $types .= "s";
+            }
+
+            // Add security code if provided
+            if ($data['securityCode']) {
+                $updates[] = "EmailSecCode = ?";
+                $params[] = $data['securityCode'];
+                $types .= "s";
+            }
+
+            // Always update security questions if provided
+            if (isset($data['secQues1'])) {
+                $updates[] = "SecQues1 = ?";
+                $params[] = $data['secQues1'];
+                $types .= "s";
+            }
+
+            if (isset($data['secQues2'])) {
+                $updates[] = "SecQues2 = ?";
+                $params[] = $data['secQues2'];
+                $types .= "s";
+            }
+
+            // Update USER table if there are any updates
+            if (!empty($updates)) {
+                $query = "UPDATE USER SET " . implode(", ", $updates) . " WHERE UserID = ?";
+                $params[] = $_SESSION['UserID'];
+                $types .= "s";
+
+                $stmt = $connMe->prepare($query);
+                if (!$stmt) {
+                    throw new Exception("Error preparing statement: " . $connMe->error);
                 }
 
-                if ($data['securityCode']) {
-                    $updates[] = "EmailSecCode = ?";
-                    $params[] = $data['securityCode'];
-                    $types .= "s";
-                }
-
-                if (!empty($updates)) {
-                    $query = "UPDATE USER SET " . implode(", ", $updates) . " WHERE UserID = ?";
-                    $params[] = $_SESSION['UserID'];
-                    $types .= "s";
-
-                    $stmt = $connMe->prepare($query);
-                    $stmt->bind_param($types, ...$params);
-                    if (!$stmt->execute()) {
-                        throw new Exception("Failed to update user information");
-                    }
+                $stmt->bind_param($types, ...$params);
+                if (!$stmt->execute()) {
+                    throw new Exception("Failed to update user information: " . $stmt->error);
                 }
             }
 

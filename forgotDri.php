@@ -112,10 +112,26 @@
             <span id="emailError" class="error"></span>
 
             <div class="form-group">
-                <label for="securityCode">Security Code:</label>
-                <input type="password" id="securityCode" name="securityCode" maxLength="8" required placeholder="Enter your security code" autocomplete="off">
+                <label>Security Question 1:</label>
+                <label class="question-text">What is your favourite food?</label>
             </div>
-            <span id="securityCodeError" class="error"></span>
+            <div class="form-group">
+                <label for="secQues1">Answer 1:</label>
+                <input type="password" id="secQues1" name="secQues1" required placeholder="Enter your answer" maxLength="30" autocomplete="off">
+            </div>
+            <span id="secQues1Error" class="error"></span>
+
+            <div class="form-group">
+                <label>Security Question 2:</label>
+                <label class="question-text">What first city did you visited on your vacation?</label>
+            </div>
+            <div class="form-group">
+                <label for="secQues2">Answer 2:</label>
+                <input type="password" id="secQues2" name="secQues2" required placeholder="Enter your answer" maxLength="50" autocomplete="off">
+            </div>
+            <span id="secQues2Error" class="error"></span>
+
+            <div id="generalError" class="error" style="text-align: center; margin-bottom: 20px;"></div>
 
             <button type="submit" class="button" id="verifyButton">Verify</button>
         </form>
@@ -136,8 +152,11 @@
         const verificationForm = document.getElementById("verificationForm");
         const emailInput = document.getElementById("email");
         const emailError = document.getElementById("emailError");
-        const securityCodeInput = document.getElementById("securityCode");
-        const securityCodeError = document.getElementById("securityCodeError");
+        const secQues1Input = document.getElementById("secQues1");
+        const secQues2Input = document.getElementById("secQues2");
+        const secQues1Error = document.getElementById("secQues1Error");
+        const secQues2Error = document.getElementById("secQues2Error");
+        const generalError = document.getElementById("generalError");
         const passwordForm = document.getElementById("passwordForm");
         const newPasswordInput = document.getElementById("newPassword");
         const pwdError = document.getElementById("pwdError");
@@ -156,29 +175,29 @@
         verificationForm.addEventListener("submit", (e) => {
             e.preventDefault();
 
-            fetch("validateEmailAndCodeDri.php", {
+            fetch("validateEmailAndSecQuesDri.php", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     email: emailInput.value.trim(),
-                    securityCode: securityCodeInput.value.trim()
+                    secQues1: secQues1Input.value.trim(),
+                    secQues2: secQues2Input.value.trim()
                 }),
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === "valid") {
-                    // Hide verification form and show password form
                     verificationForm.style.display = "none";
                     passwordForm.style.display = "block";
                 } else {
-                    securityCodeError.textContent = "Invalid email or security code. Please try again.";
+                    generalError.textContent = "Invalid email or security answers. Please try again.";
                 }
             })
             .catch(err => {
                 console.error("Error:", err);
-                securityCodeError.textContent = "An error occurred. Please try again.";
+                generalError.textContent = "An error occurred. Please try again.";
             });
         });
 
@@ -201,30 +220,33 @@
         // Password form submission
         passwordForm.addEventListener("submit", (e) => {
             e.preventDefault();
-
-            fetch("updatePwdDri.php", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email: emailInput.value.trim(),
-                    newPassword: newPasswordInput.value.trim(),
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === "success") {
-                    alert("Password successfully updated! Please login with your new password.");
-                    window.location.href = "loginDri.php";
-                } else {
-                    alert("Error updating password: " + data.message);
-                }
-            })
-            .catch(err => {
-                console.error("Error:", err);
-                alert("An unexpected error occurred. Please try again.");
-            });
+            const newPwd = newPasswordInput.value.trim();
+            
+            if (confirm(`Is this your new password?\n${newPwd}`)) {
+                fetch("updatePwdDri.php", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        email: emailInput.value.trim(),
+                        newPassword: newPwd,
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === "success") {
+                        alert("Password successfully updated! Please login with your new password.");
+                        window.location.href = "loginDri.php";
+                    } else {
+                        alert("Error updating password: " + data.message);
+                    }
+                })
+                .catch(err => {
+                    console.error("Error:", err);
+                    alert("An unexpected error occurred. Please try again.");
+                });
+            }
         });
     </script>
 </body>

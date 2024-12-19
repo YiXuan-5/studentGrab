@@ -8,20 +8,22 @@ $jsonData = file_get_contents('php://input');
 $data = json_decode($jsonData, true);
 
 try {
-    // Check if email and security code match
+    // Check if email and security answers match
     $stmt = $connMe->prepare("SELECT u.UserID 
                              FROM USER u 
                              JOIN ADMIN a ON u.UserID = a.UserID 
                              WHERE UPPER(u.EmailAddress) = UPPER(?) 
-                             AND u.EmailSecCode = ?");
+                             AND u.SecQues1 = ? 
+                             AND u.SecQues2 = ?");
     
     if (!$stmt) {
         throw new Exception("Error preparing statement: " . $connMe->error);
     }
     
-    $stmt->bind_param("ss", 
+    $stmt->bind_param("sss", 
         $data['email'],
-        $data['securityCode']
+        $data['secQues1'],
+        $data['secQues2']
     );
     
     $stmt->execute();
@@ -32,7 +34,7 @@ try {
     } else {
         echo json_encode([
             'status' => 'invalid',
-            'message' => 'Invalid email or security code'
+            'message' => 'Invalid email or security answers'
         ]);
     }
     

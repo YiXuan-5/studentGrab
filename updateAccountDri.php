@@ -27,8 +27,8 @@ try {
                 }
             }
 
-            // Update USER table if email or security code changed
-            if ($data['email'] || $data['securityCode']) {
+            // Update USER table if email, security code, or security questions changed
+            if ($data['email'] || $data['securityCode'] || $data['secQues1'] || $data['secQues2']) {
                 $updates = [];
                 $params = [];
                 $types = "";
@@ -45,8 +45,18 @@ try {
                     $types .= "s";
                 }
 
-                //!empty($updates) is used to check if there are any updates to be made
-                //implode(", ", $updates) is used to concatenate all updates with commas    
+                if ($data['secQues1']) {
+                    $updates[] = "SecQues1 = ?";
+                    $params[] = $data['secQues1'];
+                    $types .= "s";
+                }
+
+                if ($data['secQues2']) {
+                    $updates[] = "SecQues2 = ?";
+                    $params[] = $data['secQues2'];
+                    $types .= "s";
+                }
+
                 if (!empty($updates)) {
                     $query = "UPDATE USER SET " . implode(", ", $updates) . " WHERE UserID = ?";
                     $params[] = $_SESSION['UserID'];

@@ -16,6 +16,7 @@ try {
     // Get user and passenger information
     $stmt = $connMe->prepare("
         SELECT u.FullName, u.EmailAddress, u.PhoneNo, u.Gender, u.BirthDate, u.EmailSecCode, u.ProfilePicture,
+               u.SecQues1, u.SecQues2,
                p.Username, p.Password, p.FavPickUpLoc, p.FavDropOffLoc, p.Role
         FROM USER u
         JOIN PASSENGER p ON u.UserID = p.UserID
@@ -564,6 +565,12 @@ try {
         .change-pic-btn {
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
+        .question-text {
+            color: #666;
+            font-style: italic;
+            margin-left: 10px;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
@@ -640,6 +647,22 @@ try {
             <div class="profile-field">
                 <span class="field-label">Security Code</span>
                 <span class="field-value"><?php echo str_repeat('*', 8); ?></span>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">Security Question 1</span>
+                <span class="field-value">What is your favourite food?</span>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">Answer 1</span>
+                <span class="field-value"><?php echo str_repeat('*', strlen($userData['SecQues1'])); ?></span>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">Security Question 2</span>
+                <span class="field-value">What first city did you visited on your vacation?</span>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">Answer 2</span>
+                <span class="field-value"><?php echo str_repeat('*', strlen($userData['SecQues2'])); ?></span>
             </div>
         </div>
 
@@ -769,6 +792,60 @@ try {
                         </button>
                     </div>
                     <span id="securityCodeError" class="error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label>Security Question 1:</label>
+                    <label class="question-text">What is your favourite food?</label>
+                </div>
+                <div class="form-group">
+                    <label>Current Answer 1:</label>
+                    <div class="password-field">
+                        <input type="password" id="currentSecQues1" 
+                               value="<?php echo htmlspecialchars($userData['SecQues1']); ?>" 
+                               readonly class="readonly">
+                        <button type="button" class="toggle-password" onclick="togglePassword('currentSecQues1')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>New Answer 1:</label>
+                    <div class="password-field">
+                        <input type="password" id="secQues1" name="secQues1" 
+                               placeholder="Enter new answer (leave blank to keep current)"
+                               maxLength="30">
+                        <button type="button" class="toggle-password" onclick="togglePassword('secQues1')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Security Question 2:</label>
+                    <label class="question-text">What first city did you visited on your vacation?</label>
+                </div>
+                <div class="form-group">
+                    <label>Current Answer 2:</label>
+                    <div class="password-field">
+                        <input type="password" id="currentSecQues2" 
+                               value="<?php echo htmlspecialchars($userData['SecQues2']); ?>" 
+                               readonly class="readonly">
+                        <button type="button" class="toggle-password" onclick="togglePassword('currentSecQues2')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>New Answer 2:</label>
+                    <div class="password-field">
+                        <input type="password" id="secQues2" name="secQues2" 
+                               placeholder="Enter new answer (leave blank to keep current)"
+                               maxLength="50">
+                        <button type="button" class="toggle-password" onclick="togglePassword('secQues2')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="button-group">
@@ -982,6 +1059,8 @@ try {
                         password: document.getElementById('password').value,
                         email: document.getElementById('email').value.trim(),
                         securityCode: document.getElementById('securityCode').value,
+                        secQues1: document.getElementById('secQues1').value,
+                        secQues2: document.getElementById('secQues2').value,
                         userId: '<?php echo $_SESSION['UserID']; ?>',
                         psgrId: '<?php echo $_SESSION['PsgrID']; ?>'
                     })
