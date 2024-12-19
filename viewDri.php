@@ -524,6 +524,79 @@
                 });
             }
         }
+
+        // Add this function to load all drivers when the page loads
+        function loadAllDrivers() {
+            fetch('fetchDris.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ criteria: 'all' }) // Send 'all' as criteria
+            })
+            .then(response => response.json())
+            .then(results => {
+                const driverDetails = document.getElementById('driverDetails');
+                const noResults = document.getElementById('noResults');
+                driverDetails.innerHTML = '';
+                noResults.style.display = 'none';
+
+                if (!results || results.error || !Array.isArray(results) || results.length === 0) {
+                    noResults.style.display = 'block';
+                } else {
+                    results.forEach(driver => {
+                        const formattedFullName = driver.FullName
+                            .toLowerCase()
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+
+                        driverDetails.innerHTML += `
+                            <div class="driver-info">
+                                <img src="${driver.ProfilePicture ? 'data:image/jpeg;base64,' + driver.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
+                                <div class="details">
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Driver ID:</strong></span>
+                                        <span class="detail-value">${driver.DriverID}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>User ID:</strong></span>
+                                        <span class="detail-value">${driver.UserID}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Full Name:</strong></span>
+                                        <span class="detail-value">${formattedFullName}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Username:</strong></span>
+                                        <span class="detail-value">${driver.Username}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Sticker Expiry:</strong></span>
+                                        <span class="detail-value">${driver.StickerExpDate}</span>
+                                    </div>
+                                    <div class="button-group">
+                                        <button class="button" onclick="window.location.href='editDri.php?driverID=${driver.DriverID}'">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="button" onclick="deleteDriver('${driver.DriverID}', '${driver.UserID}')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('noResults').style.display = 'block';
+            });
+        }
+
+        // Call the function when the page loads
+        window.onload = loadAllDrivers;
     </script>
 </body>
 </html> 

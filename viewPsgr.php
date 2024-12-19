@@ -569,6 +569,81 @@
                     });
                 }
             }
+
+            // Add this function to load all passengers when the page loads
+            function loadAllPassengers() {
+                fetch('fetchPsgrs.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ criteria: 'all' }) // Send 'all' as criteria
+                })
+                .then(response => response.text())
+                .then(text => {
+                    try {
+                        const results = JSON.parse(text);
+                        const psgrDetails = document.getElementById('psgrDetails');
+                        const noResults = document.getElementById('noResults');
+                        psgrDetails.innerHTML = '';
+                        noResults.style.display = 'none';
+
+                        if (!results || results.error || !Array.isArray(results) || results.length === 0) {
+                            noResults.style.display = 'block';
+                        } else {
+                            results.forEach(passenger => {
+                                const formattedFullName = passenger.FullName
+                                    .toLowerCase()
+                                    .split(' ')
+                                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                    .join(' ');
+
+                                psgrDetails.innerHTML += `
+                                    <div class="passenger-info">
+                                        <img src="${passenger.ProfilePicture ? 'data:image/jpeg;base64,' + passenger.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
+                                        <div class="details">
+                                            <div class="detail-row">
+                                                <span class="detail-label"><strong>Passenger ID:</strong></span>
+                                                <span class="detail-value">${passenger.PsgrID}</span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="detail-label"><strong>User ID:</strong></span>
+                                                <span class="detail-value">${passenger.UserID}</span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="detail-label"><strong>Full Name:</strong></span>
+                                                <span class="detail-value">${formattedFullName}</span>
+                                            </div>
+                                            <div class="detail-row">
+                                                <span class="detail-label"><strong>Username:</strong></span>
+                                                <span class="detail-value">${passenger.Username}</span>
+                                            </div>
+                                            <div class="button-group">
+                                                <button class="button" onclick="window.location.href='editPsgr.php?passengerID=${passenger.PsgrID}'">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </button>
+                                                <button class="button" onclick="deletePassenger('${passenger.PsgrID}', '${passenger.UserID}')">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        }
+                    } catch (e) {
+                        console.error('JSON parse error:', e);
+                        document.getElementById('noResults').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('noResults').style.display = 'block';
+                });
+            }
+
+            // Call the function when the page loads
+            window.onload = loadAllPassengers;
         </script>
     </body>
     </html> 

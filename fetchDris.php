@@ -24,20 +24,28 @@ if (!$data || !isset($data['criteria'])) {
 
 // Prepare the SQL query based on the criteria
 $criteria = $data['criteria'];
-$driverID = $data['driverID'];
-$username = $data['username'];
 
-//Convert gender value in input field to M or F to ease in searching database
-if ($data['gender'] === 'Male') {
-    $gender = 'M';
-} else if ($data['gender'] === 'Female') {
-    $gender = 'F';
-} else {
-    $gender = '';
+// Only set these variables if not loading all records
+if ($criteria !== 'all') {
+    $driverID = isset($data['driverID']) ? $data['driverID'] : '';
+    $username = isset($data['username']) ? $data['username'] : '';
+    
+    //Convert gender value in input field to M or F to ease in searching database
+    if (isset($data['gender'])) {
+        if ($data['gender'] === 'Male') {
+            $gender = 'M';
+        } else if ($data['gender'] === 'Female') {
+            $gender = 'F';
+        } else {
+            $gender = '';
+        }
+    } else {
+        $gender = '';
+    }
+    
+    $fullName = isset($data['fullName']) ? strtoupper($data['fullName']) : '';
+    $availability = isset($data['availability']) ? $data['availability'] : '';
 }
-
-$fullName = strtoupper($data['fullName']);
-$availability = $data['availability'];
 
 $results = [];
 
@@ -128,9 +136,43 @@ try {
         $stmt = $connMe->prepare($query);
         $stmt->bind_param("s", $availabilityValue);
         error_log("Searching for Availability: " . $availabilityValue);
+    } else if ($criteria === 'all') {
+        $query = "
+            SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
+                   u.FullName, u.ProfilePicture
+            FROM DRIVER d
+            INNER JOIN USER u ON d.UserID = u.UserID
+            ORDER BY d.DriverID ASC
+        ";
+        error_log("SQL Query for all drivers: " . $query);
+
+        $stmt = $connMe->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connMe->error);
+        }
+
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            if (isset($row['ProfilePicture'])) {
+                $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
+            }
+            $results[] = $row;
+        }
+        
+        error_log("Query results for all drivers: " . print_r($results, true));
+
+        if (empty($results)) {
+            echo json_encode(['message' => 'No drivers found']);
+            exit;
+        }
     }
 
-    if (isset($stmt)) {
+    if (isset($stmt) && $criteria !== 'all') {
         if (!$stmt->execute()) {
             throw new Exception("Execute failed: " . $stmt->error);
         }
@@ -142,13 +184,6 @@ try {
                 $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
             }
             $results[] = $row;
-        }
-        
-        error_log("Query results: " . print_r($results, true));
-
-        if (empty($results)) {
-            echo json_encode(['message' => 'No results found']);
-            exit;
         }
     }
     
