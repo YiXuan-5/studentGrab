@@ -491,6 +491,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     emailSecCodeInput.addEventListener("input", validateForm);
     
     phoneInput.addEventListener("input", validateForm);
+    // Phone number validation
+    phoneInput.addEventListener('blur', async (e) => {
+            const phoneNo = e.target.value.trim();
+            
+            try {
+                const response = await fetch('validatePhoneNo.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        phoneNo: phoneNo,
+                        userType: 'PASSENGER'
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.status === 'exists') {
+                    phoneError.textContent = 'Phone number already exists. Please use another phone number.';
+                } else {
+                    phoneError.textContent = ''; // Clear error message if phone number is valid
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
 
     passwordInput.addEventListener("input", validateForm);
 
@@ -565,7 +591,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             .then((response) => response.json())
             .then((data) => {
                 if (data.status === "exists") {
-                    usernameError.textContent = "Username already exists.";
+                    usernameError.textContent = "Username already exists. Please use another username.";
                 } else if (data.status === "available") {
                     usernameError.textContent = ""; // Clear error
                 } else {

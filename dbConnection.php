@@ -11,7 +11,7 @@ $connMe = new mysqli($servernameMe, $usernameMe, $passwordMe,$localhost_dbnameMe
 if ($connMe->connect_error) {
   die("Connection failed: " . $connMe->connect_error);
 }
-
+/*
 //Aishah db connection
 $servernameAishah = "192.168.193.55";
 $usernameAishah = "wong";
@@ -25,6 +25,7 @@ $connAishah = new mysqli($servernameAishah, $usernameAishah, $passwordAishah,$lo
 if ($connAishah->connect_error) {
   die("Connection failed: " . $connAishah->connect_error);
 }
+*/
 /*
 //Aimi db connection
 $host = "192.168.193.196";
