@@ -45,6 +45,18 @@ try {
                     $types .= "s";
                 }
 
+                if (!empty($data['secQues1'])) {
+                    $updates[] = "SecQues1 = ?";
+                    $params[] = $data['secQues1'];
+                    $types .= "s";
+                }
+
+                if (!empty($data['secQues2'])) {
+                    $updates[] = "SecQues2 = ?";
+                    $params[] = $data['secQues2'];
+                    $types .= "s";
+                }
+
                 if (!empty($updates)) {
                     $query = "UPDATE USER SET " . implode(", ", $updates) . " WHERE UserID = ?";
                     $params[] = $data['userId'];

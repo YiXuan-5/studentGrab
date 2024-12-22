@@ -16,6 +16,7 @@ if ($driverID) {
     $stmt = $connMe->prepare("
         SELECT u.FullName, u.EmailAddress, u.PhoneNo, u.Gender, u.BirthDate, 
                u.EmailSecCode, u.ProfilePicture, u.UserType,
+               u.SecQues1, u.SecQues2,
                d.Username, d.Password, d.LicenseNo, d.LicenseExpDate, d.EHailingLicense,
                d.StickerExpDate, d.Availability, d.CompletedRide, d.UserID
         FROM USER u
@@ -381,6 +382,66 @@ if ($driverID) {
                 </div>
             </div>
 
+            <div class="profile-field">
+                <span class="field-label">Security Question 1:</span>
+                <label class="question-text">What is your favourite food?</label>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">Current Answer 1:</span>
+                <div class="input-wrapper">
+                    <div class="password-field">
+                        <input type="password" class="field-value" id="currentSecQues1" 
+                               value="<?php echo htmlspecialchars($driverData['SecQues1']); ?>" readonly>
+                        <button type="button" class="toggle-password" onclick="togglePassword('currentSecQues1')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">New Answer 1:</span>
+                <div class="input-wrapper">
+                    <div class="password-field">
+                        <input type="password" class="field-value" id="secQues1" name="secQues1" 
+                               placeholder="Enter new answer (leave blank to keep current)"
+                               maxLength="30" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('secQues1')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-field">
+                <span class="field-label">Security Question 2:</span>
+                <label class="question-text">What first city did you visited on your vacation?</label>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">Current Answer 2:</span>
+                <div class="input-wrapper">
+                    <div class="password-field">
+                        <input type="password" class="field-value" id="currentSecQues2" 
+                               value="<?php echo htmlspecialchars($driverData['SecQues2']); ?>" readonly>
+                        <button type="button" class="toggle-password" onclick="togglePassword('currentSecQues2')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">New Answer 2:</span>
+                <div class="input-wrapper">
+                    <div class="password-field">
+                        <input type="password" class="field-value" id="secQues2" name="secQues2" 
+                               placeholder="Enter new answer (leave blank to keep current)"
+                               maxLength="50" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('secQues2')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <div class="section-button">
                 <button type="submit" class="button save-btn">Save Changes</button>
             </div>
@@ -668,7 +729,9 @@ if ($driverID) {
                 username: username,
                 password: password,
                 email: email,
-                securityCode: securityCode
+                securityCode: securityCode,
+                secQues1: document.getElementById('secQues1').value.trim(),
+                secQues2: document.getElementById('secQues2').value.trim()
             };
 
             try {

@@ -43,6 +43,18 @@ try {
                 $types .= "s";
             }
 
+            if (!empty($data['secQues1'])) {
+                $updateUserSQL .= "SecQues1 = ?, ";
+                $params[] = $data['secQues1'];
+                $types .= "s";
+            }
+
+            if (!empty($data['secQues2'])) {
+                $updateUserSQL .= "SecQues2 = ?, ";
+                $params[] = $data['secQues2'];
+                $types .= "s";
+            }
+
             // Remove trailing comma and add WHERE clause
             $updateUserSQL = rtrim($updateUserSQL, ", ") . " WHERE UserID = ?";
             $params[] = $userID;
