@@ -1,16 +1,34 @@
 <?php
 $servernameMe = "localhost";
 $usernameMe = "root";
-$passwordMe = "";
-$localhost_dbnameMe = "db_uprs"; 
+$passwordMe = "w2Group1"; // Wrong password for testing
+$localhost_dbnameMe = "db_uprs";
 
-// Create connection
+// Enable error reporting for debugging (can be removed in production)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+try {
+    // Create connection
+    $connMe = new mysqli($servernameMe, $usernameMe, $passwordMe, $localhost_dbnameMe);
+
+} catch (mysqli_sql_exception $e) {
+    // Handle the exception and show a custom error message
+    echo "Connection to database " . $localhost_dbnameMe . " for IP address 192.168.193.5 failed<br> Please check your database credentials or the connectivity.";
+}
+
+
+/* 
 $connMe = new mysqli($servernameMe, $usernameMe, $passwordMe,$localhost_dbnameMe);
 
 // Check connection
 if ($connMe->connect_error) {
-  die("Connection failed: " . $connMe->connect_error);
+  die ("Connection failed: " . $connMe->connect_error);
+  //echo "Connection Error";
 }
+
+*/
 /*
 //Aishah db connection
 $servernameAishah = "192.168.193.55";
@@ -19,11 +37,13 @@ $passwordAishah = "abc123";
 $localhost_dbnameAishah = "workshop2"; 
 
 // Create connection
-$connAishah = new mysqli($servernameAishah, $usernameAishah, $passwordAishah,$localhost_dbnameAishah);
+try {
+    // Create connection
+    $connAishah = new mysqli($servernameAishah, $usernameAishah, $passwordAishah,$localhost_dbnameAishah);
 
-// Check connection
-if ($connAishah->connect_error) {
-  die("Connection failed: " . $connAishah->connect_error);
+} catch (mysqli_sql_exception $e) {
+    // Handle the exception and show a custom error message
+    echo "Connection to database " . $localhost_dbnameAishah . " for IP address " . $servernameAishah . "failed<br> Please check database credentials or the connectivity.";
 }
 */
 /*
@@ -42,7 +62,7 @@ try {
     $connAimi->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     // No success message is output here
 } catch (PDOException $e) {
-    echo "Connection failed: " . $e->getMessage();
+    echo "Connection to database " . $dbname . " for IP address " . $host . "failed<br> Please check database credentials or the connectivity.";
 }
 */
 //Zul db connection
@@ -53,11 +73,13 @@ $passwordZul = "abc123";
 $localhost_dbnameZul = "peerride"; 
 
 // Create connection
-$connZul = new mysqli($servernameZul, $usernameZul, $passwordZul,$localhost_dbnameZul);
+try {
+    // Create connection
+    $connZul = new mysqli($servernameZul, $usernameZul, $passwordZul,$localhost_dbnameZul);
 
-// Check connection
-if ($connZul->connect_error) {
-  die("Connection failed: " . $connZul->connect_error);
+} catch (mysqli_sql_exception $e) {
+    // Handle the exception and show a custom error message
+    echo "Connection to database " . $localhost_dbnameZul . " for IP address " . $servernameZul . "failed<br> Please check database credentials or the connectivity.";
 }
 */
 ?>

@@ -212,7 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
     <div class="container">
-        <a href="mainPage.html" class="close-icon">✖</a>
+        <a href="loginPsgr.php" class="close-icon">✖</a>
         <h1>Registration Passenger</h1>
 
         <form id="emailForm" method = "POST">

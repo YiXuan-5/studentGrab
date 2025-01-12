@@ -1,6 +1,5 @@
 <?php
 /*php code*/
-
 session_start(); // Start the session
 include 'dbConnection.php'; // Include database connection
 
@@ -35,9 +34,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['UserID'] = $row['UserID'];
 
         echo "success"; // Plain text response
+        // Return success with session data as JSON
+        /*echo json_encode([
+            "status" => "success",
+            "UserID" => $_SESSION['UserID'],
+            "PsgrID" => $_SESSION['PsgrID']
+        ]);
+        */
+        
     } else {
         // Login failed
         echo "Wrong username or password."; // Plain text response
+        /*echo json_encode([
+            "status" => "error",
+            "message" => "Wrong username or password."
+        ]);
+        */
     }
 
     $stmt->close(); // Close statement
@@ -169,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <div class="container">
         <!-- Back arrow -->
-        <a href="mainPage.html" class="back-arrow">
+        <a href="mainPagePsgrDri.html" class="back-arrow">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <!-- top-left corner;width and height of the viewBox-->
                 <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
             </svg>
@@ -236,6 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         //converts the PHP response into plain text 
         .then(response => response.text()) 
         .then(data => {
+            
             if (data.trim() === "success") {
                 // Handle success
                 messageDiv.textContent = "Dear passenger, login successful!";
@@ -243,14 +256,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 //
                 setTimeout(() => {
                     
-                    window.location.href = "https://192.168.193.55/workshop2/uprs/homePagePass.php"; // Redirect to next page
+                    //window.location.href = "http://192.168.193.55/workshop2/uprs/homePagePass.php"; // Redirect to next page
                     
-                    /*window.location.href = "profilePsgr.php";
-                    */
+                    //window.location.href = "profilePsgr.php"
+                   // After successful login
+                   window.location.href = "http://192.168.193.196/submitRating.php?UserID=<?php echo $_SESSION['UserID']; ?>&PsgrID=<?php echo $_SESSION['PsgrID']; ?>"
+
+                    //window.location.href = "http://192.168.193.196/submitFeedback.php";
+                    
                 }, 2000); //2000ms = 2s to wait bfr move to next page
             } else {
                 // Handle error
                 messageDiv.textContent = data; // Display the error message
+            
                 messageDiv.style.color = "red";
             }
         })

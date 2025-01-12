@@ -168,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <div class="container">
         <!-- Back arrow -->
-        <a href="mainPage.html" class="back-arrow">
+        <a href="mainPageAdm.html" class="back-arrow">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"> <!-- top-left corner;width and height of the viewBox-->
                 <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
             </svg>

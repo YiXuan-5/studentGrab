@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UTeM Peer Ride</title>
+    <title>UTeM Peer Ride - Admin</title>
     <style>
         body {
             margin: 0;
@@ -116,14 +116,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Welcome to</h1>
+            <h1>Welcome Admin</h1>
             <img src="Image/logo" alt="UTeM Peer Ride Logo" class="logo">
         </div>
-        <p class="hint">Please choose your role to enter the system:</p>
+        <p class="hint">Please click the button below to log in:</p>
         <div class="buttons">
-            <a href="loginPsgr.php" class="button">Passenger</a>
-            <a href="loginDri.php" class="button">Driver</a>
-            <a href="#" class="button" id="adminBtn">Admin</a> <!-- # indicates that the link doesn’t point to any specific URL or destination.-->
+            <a href="#" class="button" id="adminBtn">Admin Login</a>
         </div>
     </div>
 
@@ -132,7 +130,7 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2>Enter Admin Key:</h2>
-            <input type="password" id="enrollKey" placeholder="Enrollment Key" autocomplete="off"> <!--disables the browser's autofill feature for previously saved input values,-->
+            <input type="password" id="enrollKey" placeholder="Enrollment Key" autocomplete="off">
             <button onclick="validateKey()" class="submit-button">Submit</button>
             <p id="errorMsg" style="color: red; display: none;">Wrong enrollment key. Try again.</p>
         </div>

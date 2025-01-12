@@ -207,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 </head>
 <body>
     <div class="container">
-        <a href="mainPage.html" class="close-icon">✖</a>
+        <a href="loginDri.php" class="close-icon">✖</a>
         <h1>Registration Driver</h1>
 
         <!-- Email Check Form -->
