@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $response['status'] = 'exists_user';
 
             // Store common attributes
-            $stmt = $connMe->prepare("SELECT FullName, EmailAddress, PhoneNo, UserType, BirthDate, Gender, EmailSecCode FROM USER WHERE UserID = ?");
+            $stmt = $connMe->prepare("SELECT FullName, EmailAddress, PhoneNo, UserType, BirthDate, Gender, EmailSecCode, SecQues1, SecQues2 FROM USER WHERE UserID = ?");
             $stmt->bind_param("s", $userID);
             $stmt->execute();
             $result = $stmt->get_result();
