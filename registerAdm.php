@@ -6,68 +6,109 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    //$_POST[name attribute of input field] 
-    //take input value of email from html form  
     $email = $_POST['email'];
-
-    // Check if the user already exists
-    //Make sure no matter user insert lower or upper case
-    $stmt = $connMe->prepare("SELECT UserID FROM USER WHERE EmailAddress = UPPER(?)");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $phone = $_POST['phone'];
     
-    if ($result->num_rows === 1) {
-        $row = $result->fetch_assoc();
-        $userID = $row['UserID'];
+    $response = []; // Initialize response array
 
-        // Check if the user is already registered as a admin
-        $stmt = $connMe->prepare("SELECT AdminID FROM ADMIN WHERE UserID = ?");
-        $stmt->bind_param("s", $userID);
-        $stmt->execute();
-        $result = $stmt->get_result();
+    $emailUserID = null;
+    $phoneUserID = null;
 
-        if ($result->num_rows === 1) {
-            // User is already a admin
-            $response['status'] = 'exists_admin';
-        } else {
-            // Send user data as part of the response
-            $response['status'] = 'exists_user';
+    // Check email
+    if ($email) {
+        $emailUpper = strtoupper($email); // Normalize email
+        $stmtEmail = $connMe->prepare("SELECT UserID FROM USER WHERE EmailAddress = ?");
+        $stmtEmail->bind_param("s", $emailUpper);
+        $stmtEmail->execute();
+        $resultEmail = $stmtEmail->get_result();
 
-            //Store common attribute into userData association array
-            $stmt = $connMe->prepare("SELECT FullName, EmailAddress, PhoneNo, UserType, BirthDate, Gender, EmailSecCode, SecQues1, SecQues2 FROM USER WHERE UserID = ?");
-            $stmt->bind_param("s", $userID);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            $row = $result->fetch_assoc(); // fetches a result row as an associative array.
-            //key name of the array need to same as the id name in html to make the process of 
-            //search the id input easier (querySelector())
-
-            $response['userData'] = [
-                'fullName' => $row['FullName'],
-                'emailChecked' => $row['EmailAddress'],
-                'phoneNo' => $row['PhoneNo'],
-                'userType' => $row['UserType'],
-                'birthDate' => $row['BirthDate'],
-                'gender' => $row['Gender'],
-                'emailSecCode' => $row['EmailSecCode'],
-                'secQues1' => $row['SecQues1'],
-                'secQues2' => $row['SecQues2']
-            ];
+        //Find a user based on email
+        if ($resultEmail->num_rows === 1) {
+            $row = $resultEmail->fetch_assoc();
+            $emailUserID = $row['UserID'];
         }
-    } else {
-        // User does not exist
-        $response['status'] = 'exists_none';
+        $stmtEmail->close();
     }
 
-    $stmt->close();
+    // Check phone
+    if ($phone) {
+        $stmtPhone = $connMe->prepare("SELECT UserID FROM USER WHERE PhoneNo = ?");
+        $stmtPhone->bind_param("s", $phone);
+        $stmtPhone->execute();
+        $resultPhone = $stmtPhone->get_result();
+
+        //Find user based on phone number
+        if ($resultPhone->num_rows === 1) {
+            $row = $resultPhone->fetch_assoc();
+            $phoneUserID = $row['UserID'];
+        }
+        $stmtPhone->close();
+    }
+
+    // Handle ambiguity
+    //If email and phone number find the user
+    if ($emailUserID && $phoneUserID) {
+
+        //If the email and phone number refers to same user
+        if ($emailUserID === $phoneUserID) {
+            $userID = $emailUserID;
+        } else {
+            // Conflict: email and phone point to different users
+            $response['status'] = 'conflict';
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit;
+        }
+    } elseif ($emailUserID) {
+        $userID = $emailUserID; // Use the user found by email
+    } elseif ($phoneUserID) {
+        $userID = $phoneUserID; // Use the user found by phone
+    } else {
+        $response['status'] = 'exists_none';
+        header('Content-Type: application/json');
+        echo json_encode($response);
+        exit;
+    }
+
+    // At this point, $userID is guaranteed to be the correct user
+    // Check if user is a admin
+    $stmtAdmin = $connMe->prepare("SELECT AdminID FROM ADMIN WHERE UserID = ?");
+    $stmtAdmin->bind_param("s", $userID);
+    $stmtAdmin->execute();
+    $resultAdmin = $stmtAdmin->get_result();
+
+    if ($resultAdmin->num_rows === 1) {
+        $response['status'] = 'exists_admin';
+    } else {
+        $response['status'] = 'exists_user';
+
+        // Fetch user details
+        $stmtUser = $connMe->prepare("SELECT FullName, EmailAddress, PhoneNo, UserType, BirthDate, Gender, EmailSecCode, SecQues1, SecQues2 FROM USER WHERE UserID = ?");
+        $stmtUser->bind_param("s", $userID);
+        $stmtUser->execute();
+        $resultUser = $stmtUser->get_result();
+        $userDetails = $resultUser->fetch_assoc();
+
+        $response['userData'] = [
+            'fullName' => $userDetails['FullName'],
+            'emailChecked' => $userDetails['EmailAddress'],
+            'phoneChecked' => $userDetails['PhoneNo'],
+            'userType' => $userDetails['UserType'],
+            'birthDate' => $userDetails['BirthDate'],
+            'gender' => $userDetails['Gender'],
+            'emailSecCode' => $userDetails['EmailSecCode'],
+            'secQues1' => $userDetails['SecQues1'],
+            'secQues2' => $userDetails['SecQues2']
+        ];
+        $stmtUser->close();
+    }
+    $stmtAdmin->close();
     $connMe->close();
 
     // Send the response as JSON
     header('Content-Type: application/json');
     echo json_encode($response);
-    exit; //Avoid execute the code below
+    exit;
 }
 ?>
 
@@ -217,13 +258,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <a href="loginAdm.php" class="close-icon">✖</a>
         <h1>Registration Admin</h1>
 
-        <form id="emailForm" method = "POST">
+        <form id="emailNPhoneForm" method = "POST">
             <!-- Email Input -->
             <div class="form-group" id="emailStep" style="display: none;">
                 <label for="email">Email Address:</label>
                 <input type="text" id="email" name="email" required placeholder="Your active email" autocomplete="off"> <!--check email format-->
             </div>
             <span id="emailError" class="error"></span>
+
+            <!-- Phone Input -->
+            <div class="form-group" id="phoneStep" style="display: none;">
+                <label for="phone">Phone Number:</label>
+                <input type="text" id="phone" name="phone" required maxLength=12 placeholder="Your active phone number" autocomplete="off">
+            </div>
+            <span id="phoneError" class="error"></span>
+            <span id="checkError" class="error"></span>
 
             <!-- Check Button -->
             <button type="submit" class="button" id="checkButton">Check</button>
@@ -262,12 +311,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 </div>
                 <!--Seperate from div part to avoid the error message occur side-by-side-->
                 <span id="emailSecCodeError" class="error"></span> <!-- Error message will be displayed here -->
+                
                 <div class="form-group">
-                    <label for="phoneNo">Phone Number:</label>
-                    <input type="text" id="phoneNo" name="phoneNo" maxLength=12 required autocomplete="off">
+                    <label for="phoneChecked">Phone Number:</label>
+                    <input type="text" id="phoneChecked" name="phoneChecked" readonly>
                 </div>
-                <!--Seperate from div part to avoid the error message occur side-by-side-->
-                <span id="phoneError" class="error"></span> <!-- Error message will be displayed here -->
 
                 <div class="form-group">
                     <label for="userType">Type of User:</label>
@@ -358,15 +406,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <script>
 
     const emailStep = document.getElementById("emailStep");
+    const phoneStep = document.getElementById("phoneStep");
     const checkButton = document.getElementById("checkButton");
-    const emailForm = document.getElementById("emailForm");
+    const emailNPhoneForm = document.getElementById("emailNPhoneForm");
     const emailInput = document.getElementById("email");
     const emailError = document.getElementById("emailError");
+    const checkError = document.getElementById("checkError");
 
     const registerForm = document.getElementById("registerForm");
     const userFields = document.getElementById("userFields");
-    const phoneInput = document.getElementById("phoneNo");
+    const phoneInput = document.getElementById("phone");
     const phoneError = document.getElementById("phoneError");
+
     const adminFields = document.getElementById("adminFields");
     const passwordInput = document.getElementById("password");
     const pwdError = document.getElementById("pwdError");
@@ -379,9 +430,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     const securityCodeError = document.getElementById("securityCodeError");
     const validateSecCodeButton = document.getElementById("validateSecCodeButton");
 
+    let validEmail = null;
     // Initialize the form based on the radio button state when the page loads
     document.addEventListener("DOMContentLoaded", () => {
             emailStep.style.display = "block"; //Show email input
+            phoneStep.style.display = "block";
             dividerSection.style.display = "none";
             userFields.style.display = "none";
             adminFields.style.display = "none";
@@ -389,43 +442,51 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             submitButton.style.display = "none";
     });
 
+    // Function to validate both email and phone number
+    function validateInputs() {
+        const emailValue = emailInput.value.trim();
+        const phoneValue = phoneInput.value.trim();
+
+        // Email validation
+        const isEmailValid = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailValue);
+        emailError.textContent = isEmailValid ? "" : "Enter email with correct format (Eg: abc@gmail.com).";
+
+        // Phone validation
+        const isPhoneValid = /^[0-9]{3}-[0-9]{7,8}$/.test(phoneValue);
+        phoneError.textContent = isPhoneValid ? "" : "Enter phone number (Eg:012-34567890).";
+
+        // Enable or disable the check button based on both validations
+        checkButton.disabled = !(isEmailValid && isPhoneValid);
+
+        //Call function to fill in email value
+        fillEmailReadonlyValue();
+        //Call function to fill in phone value
+        fillPhoneReadonlyValue();
+    }
 
     //Check format email
     emailInput.addEventListener("input", () => {
-        // Clear any previous error messages
-        emailError.textContent = ""; 
-        emailInput.setCustomValidity("");
+        validateInputs(); // Call the validation function
+    });
 
-        const emailValue = emailInput.value.trim();
-        const isValid = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(emailValue);
-
-        if (!isValid) {
-            emailError.textContent = "Enter email with correct format (Eg: abc@gmail.com).";
-            emailInput.setCustomValidity("");
-            checkButton.disabled = true; // Disable the button for invalid email
-
-        } else {
-            emailError.textContent = "";
-            emailInput.setCustomValidity(""); // Clear any error messages
-            checkButton.disabled = false; // Enable the check button if valid
-            //Set the email address value based on user enter before fill in all information
-            fillReadonlyValue();
-        }
+    // Check format phone
+    phoneInput.addEventListener("input", () => {
+        validateInputs(); // Call the validation function
     });
 
     //Email checking
-    emailForm.addEventListener("submit", (e) => {
+    emailNPhoneForm.addEventListener("submit", (e) => {
         e.preventDefault(); // Prevent form from submitting
 
-        emailError.style.color = "";
+        checkError.style.color = "";
 
         // Collect form data
-        const emailFormData = new FormData(emailForm);
+        const emailNPhoneFormData = new FormData(emailNPhoneForm);
 
         // Send FormData to backend
         fetch("registerAdm.php", {
             method: "POST",
-            body: emailFormData,
+            body: emailNPhoneFormData,
         })
         .then((response) => response.json()) // Parse the response as JSON
         .then((data) => {
@@ -433,8 +494,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Handle response based on the JSON data
             if (data.status === "exists_admin") {
-                emailError.style.color = "red"; 
-                emailError.textContent = "You are already registered as a admin.";
+                checkError.style.color = "red"; 
+                checkError.textContent = "You are already registered as a admin.";
 
                 //Do not display any textfield
                 dividerSection.style.display = "none";
@@ -443,18 +504,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 submitButton.style.display = "none";
                 
             } else if (data.status === "exists_user") {
-                emailError.style.color = "green"; // Green for 'exists_user'
+                checkError.style.color = "green"; // Green for 'exists_user'
 
                 //show admin specific field only
                 dividerSection.style.display = "none";
-                emailError.textContent = "Email exists. Welcome!\nPlease enter your email's security code.";
-                emailError.style.whiteSpace = "pre-wrap"; // Ensures the \n is interpreted as a line break.
+                checkError.textContent = "Email or phone number exists. Welcome!\nPlease enter your email's security code.";
+                checkError.style.whiteSpace = "pre-wrap"; // Ensures the \n is interpreted as a line break.
                 userFields.style.display = "none";
                 adminFields.style.display = "none"; //Hide admin field
                 submitButton.style.display = "none"; //Hide submit button
                 submitButton.disabled = false; // Make sure the button is enabled
                 checkButton.style.display = "none";
                 emailStep.style.display = "none"; 
+                phoneStep.style.display = "none";
 
                 // Show the security code input field
                 securityCodeSection.style.display = "block";
@@ -478,6 +540,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             inputElement.value = userData[key];
                         }
                     }
+                    validEmail = userData.emailChecked;
                 }
 
             } else if (data.status === "exists_none") {
@@ -485,14 +548,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 //Show all textfield
                 dividerSection.style.display = "block"; 
-                emailError.textContent = "Email does not exist. Welcome, new user!\nKindly fill in all user information required as admin.";
-                emailError.style.whiteSpace = "pre-wrap"; // Ensures the \n is interpreted as a line break.
+                checkError.textContent = "Email or phone number does not exist. Welcome, new user!\nKindly fill in all user information required as admin.";
+                checkError.style.whiteSpace = "pre-wrap"; // Ensures the \n is interpreted as a line break.
                 userFields.style.display = "block";
                 adminFields.style.display = "block";
                 submitButton.style.display = "block";
                 checkButton.style.display = "none";
                 emailStep.style.display = "none"; 
+                phoneStep.style.display = "none";
 
+            }else if (data.status === "conflict"){
+                checkError.style.color = "red"; 
+                checkError.textContent = "The email and phone number belong to different users. Please verify your input.";
+
+                //Do not display any textfield
+                dividerSection.style.display = "none";
+                userFields.style.display = "none";
+                adminFields.style.display = "none";
+                submitButton.style.display = "none";
             }else {
                 console.log("Unexpected response:", data); // Log unexpected responses
             }
@@ -508,41 +581,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     //so, if error is cleared, it will "loop" back to the isValid "true"
     //no need put parentheses to the function, cuz are passing the reference to the validateForm function, not calling it directly. 
     emailSecCodeInput.addEventListener("input", validateForm);
-    
-    phoneInput.addEventListener("input", validateForm);
-    // Phone number validation
-    phoneInput.addEventListener('blur', async (e) => {
-        const phoneNo = e.target.value.trim();
-        
-        try {
-            const response = await fetch('validatePhoneNo.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    phoneNo: phoneNo,
-                    userType: 'ADMIN'
-                })
-            });
-            const data = await response.json();
-            
-            if (data.status === 'exists') {
-                phoneError.textContent = 'Phone number already exists. Please use another phone number.';
-            } else {
-                phoneError.textContent = ''; // Clear error message if phone number is valid
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    });
-
 
     passwordInput.addEventListener("input", validateForm);
 
     // Validate the security code when the button is clicked
     validateSecCodeButton.addEventListener("click", () => {
-        const emailValue = emailInput.value.trim().toUpperCase();
+        const emailValue = validEmail.trim().toUpperCase();
         const securityCodeValue = securityCodeInput.value.trim();
 
         // Reset error message
@@ -564,27 +608,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 securityCode: securityCodeValue,
             }),
         })
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.status === "valid") {
-                    securityCodeError.style.color = "green";
-                    securityCodeError.textContent = "Security code is valid!\nKindly complete your specific admin information below.";
-                    securityCodeError.style.whiteSpace = "pre-wrap"; 
-                    dividerSection.style.display = "block";
-                    securityCodeSection.style.display = "none"; // Hide security code section
-                    adminFields.style.display = "block"; // Show admin-specific fields
-                    submitButton.style.display = "block"; // Show submit button
-                } else {
-                    securityCodeError.style.color = "red";
-                    securityCodeError.textContent = "Invalid security code. Please try again.";
-                    adminFields.style.display = "none"; // Hide admin fields
-                    submitButton.style.display = "none"; // Hide submit button
-                }
-            })
-            .catch((err) => {
-                console.error("Error:", err);
-                securityCodeError.textContent = "An error occurred. Please try again.";
-            });
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.status === "valid") {
+                securityCodeError.style.color = "green";
+                securityCodeError.textContent = "Security code is valid!\nKindly complete your specific admin information below.";
+                securityCodeError.style.whiteSpace = "pre-wrap"; 
+                dividerSection.style.display = "block";
+                securityCodeSection.style.display = "none"; // Hide security code section
+                adminFields.style.display = "block"; // Show admin-specific fields
+                submitButton.style.display = "block"; // Show submit button
+            } else {
+                securityCodeError.style.color = "red";
+                securityCodeError.textContent = "Invalid security code. Please try again.";
+                adminFields.style.display = "none"; // Hide admin fields
+                submitButton.style.display = "none"; // Hide submit button
+            }
+        })
+        .catch((err) => {
+            console.error("Error:", err);
+            securityCodeError.textContent = "An error occurred. Please try again.";
+        });
     });
 
     //validate username input blur: check after user finish typing and leave the field
@@ -667,7 +711,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             //in order to make current role concat with what the user register now
             if(upperCaseLabel === "TYPE OF USER:") {
-                if (emailError.textContent.includes("Email exists")) {
+                if (checkError.textContent.includes("Email or phone number exists")) {
                     // For existing users, concatenate with current value
                     inputValue = inputValue.concat(" ", "ADMIN");
                 } else {
@@ -699,7 +743,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Create an object to hold all form data and the user status
             const registrationData = {
                 formData: Object.fromEntries(formData),
-                isExistingUser: emailError.textContent.includes("Email exists") // Check if it's an existing user
+                isExistingUser: checkError.textContent.includes("Email or phone number exists") // Check if it's an existing user
             };
 
             // Send to processRegAdm.php
@@ -745,7 +789,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     //Set the email address value based on user enter before fill in all information
-    function fillReadonlyValue() {
+    function fillEmailReadonlyValue() {
         // Get the value from the "email" input
         const emailValue = document.getElementById('email').value;
         
@@ -753,15 +797,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         document.getElementById('emailChecked').value = emailValue;
     }
 
+    //Set the phone value based on user enter before fill in all information
+    function fillPhoneReadonlyValue() {
+        // Get the value from the "phone" input
+        const phoneValue = document.getElementById('phone').value;
+        
+        // Set the value of the "phoneChecked" input
+        document.getElementById('phoneChecked').value = phoneValue;
+    }
+
     // To ensure one of the input field is not correct, submit button cannot be clicked
     //phone no, pwd checking
     function validateForm() {
-        const phoneValue = phoneInput.value.trim();
         const pwdValue = passwordInput.value.trim();
         const emailSecCodeValue = emailSecCodeInput.value.trim();
 
         // Reset error messages
-        phoneError.textContent = "";
         pwdError.textContent = "";
         emailSecCodeError.textContent = "";
 
@@ -771,13 +822,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         //if not contain at least 1 lower Case, 1 upperCase, 1 number, 1 special characters, min 4charac, max 8 characters
         if(!/^(?=(.*[a-z]))(?=(.*[A-Z]))(?=(.*[0-9]))(?=(.*[!@#$%^&*]))[a-zA-Z0-9!@#$%^&*]{4,8}$/.test(emailSecCodeValue)){
             emailSecCodeError.textContent = "Must contains lowercase, uppercase, number, special character(!@#$%^&*).";
-            isValid = false;
-        }
-
-        // Validate phone number
-        //If not valid
-        if (!/^[0-9]{3}-[0-9]{7,8}$/.test(phoneValue)) {
-            phoneError.textContent = "Enter phone number (Eg:012-34567890).";
             isValid = false;
         }
 
