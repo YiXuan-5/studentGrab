@@ -170,6 +170,17 @@ try {
             echo json_encode(['message' => 'No drivers found']);
             exit;
         }
+    } else if ($criteria === 'stickerExpiry' || $criteria === 'stickerExpDate') {
+        $query = "
+            SELECT d.DriverID, d.UserID, d.Username, 
+                   u.FullName, u.ProfilePicture, d.StickerExpDate
+            FROM DRIVER d
+            INNER JOIN USER u ON d.UserID = u.UserID
+            WHERE d.StickerExpDate BETWEEN ? AND ?
+            ORDER BY d.DriverID ASC
+        ";
+        $stmt = $connMe->prepare($query);
+        $stmt->bind_param("ss", $data['startDate'], $data['endDate']);
     }
 
     if (isset($stmt) && $criteria !== 'all') {

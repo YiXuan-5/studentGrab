@@ -277,6 +277,63 @@
             display: flex;
             gap: 15px;
         }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .header-label {
+            margin-right: 5px;
+        }
+
+        .fas.fa-sort {
+            cursor: pointer;
+            color: #000;
+        }
+
+        .fas.fa-table {
+            cursor: pointer;
+            color: #000;
+            margin-left: auto;
+        }
+
+        /* Add these table styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #4caf50;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #ddd;
+        }
+
+        table td .button {
+            padding: 5px 10px;
+            margin: 2px;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -320,7 +377,7 @@
                     <option value="username">Username</option>
                     <option value="gender">Gender</option>
                     <option value="fullName">Full Name</option>
-                    <option value="stickerExpDate">Sticker Expiry Date</option>
+                    <option value="stickerExpiry">Sticker Expiry Date</option>
                     <option value="availability">Availability</option>
                 </select>
 
@@ -367,6 +424,21 @@
                             </label>
                         </div>
                     </div>
+
+                    <div id="stickerExpiryField" style="display: none;">
+                        <label>Sticker Expiry Date Range:</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <div>
+                                <label for="startDate" style="font-size: 14px;">From:</label>
+                                <input type="date" id="startDate" onchange="validateDateRange()" style="font-size: 14px; padding: 4px;">
+                            </div>
+                            <div>
+                                <label for="endDate" style="font-size: 14px;">To:</label>
+                                <input type="date" id="endDate" onchange="validateDateRange()" style="font-size: 14px; padding: 4px;">
+                            </div>
+                        </div>
+                        <span id="dateError" style="color: red; font-size: 12px;"></span>
+                    </div>
                 </div>
 
                 <button class="button" onclick="searchDrivers()">Search</button>
@@ -376,7 +448,21 @@
         <!-- Right Section for Driver Results -->
         <div class="right-section">
             <h2 class="section-title">Driver Matching Result</h2>
+            <div id="totalUsers" style="font-size: 16px; color: #4caf50; margin-bottom: 15px;">
+                <strong>Total matching users: 0</strong>
+            </div>
             <div id="resultContainer" class="result-container">
+                <div class="result-header">
+                    <span class="header-label"><strong>Driver ID</strong></span>
+                    <i class="fas fa-sort" onclick="toggleSortOrder('driverID')"></i>
+                    <span class="header-label"><strong>User ID</strong></span>
+                    <i class="fas fa-sort" onclick="toggleSortOrder('userID')"></i>
+                    <span class="header-label"><strong>Full Name</strong></span>
+                    <i class="fas fa-sort" onclick="toggleSortOrder('fullName')"></i>
+                    <span class="header-label"><strong>Sticker Expiry</strong></span>
+                    <i class="fas fa-sort" onclick="toggleSortOrder('stickerExpiry')"></i>
+                    <i class="fas fa-table" onclick="toggleViewStyle()" title="Toggle Table View"></i>
+                </div>
                 <div id="driverDetails"></div>
                 <div id="noResults" class="no-results" style="display: none;">Results not found</div>
             </div>
@@ -384,6 +470,10 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllDrivers();
+        });
+
         function showInputFields() {
             const criteria = document.getElementById('criteria').value;
             const inputFields = document.getElementById('inputFields');
@@ -395,6 +485,7 @@
             document.getElementById('genderField').style.display = 'none';
             document.getElementById('fullNameField').style.display = 'none';
             document.getElementById('availabilityField').style.display = 'none';
+            document.getElementById('stickerExpiryField').style.display = 'none';
 
             // Show the corresponding input field based on selected criteria
             if (criteria === 'driverID') {
@@ -407,8 +498,9 @@
                 document.getElementById('fullNameField').style.display = 'block';
             } else if (criteria === 'availability') {
                 document.getElementById('availabilityField').style.display = 'block';
+            } else if (criteria === 'stickerExpiry') {
+                document.getElementById('stickerExpiryField').style.display = 'block';
             }
-            // Note: stickerExpDate doesn't need an input field
         }
 
         function searchDrivers() {
@@ -419,9 +511,15 @@
             const gender = document.querySelector('input[name="gender"]:checked') ? 
                           document.querySelector('input[name="gender"]:checked').value : '';
             const availability = document.querySelector('input[name="availability"]:checked') ? 
-                               document.querySelector('input[name="availability"]:checked').value : '';
+                                document.querySelector('input[name="availability"]:checked').value : '';
 
-            const data = {
+            // If "All" is selected, call loadAllDrivers directly
+            if (criteria === 'all') {
+                loadAllDrivers();
+                return;
+            }
+
+            let data = {
                 criteria: criteria,
                 driverID: driverID,
                 username: username,
@@ -430,10 +528,17 @@
                 availability: availability
             };
 
-            // If "All" is selected, call loadAllDrivers directly
-            if (criteria === 'all') {
-                loadAllDrivers();
-                return;
+            // Handle sticker expiry date range
+            if (criteria === 'stickerExpiry' || criteria === 'stickerExpDate') {
+                const startDate = document.getElementById('startDate').value;
+                const endDate = document.getElementById('endDate').value;
+                
+                if (!validateDateRange()) {
+                    return;
+                }
+
+                data.startDate = startDate;
+                data.endDate = endDate;
             }
 
             fetch('fetchDris.php', {
@@ -443,59 +548,26 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
-            .then(results => {
-                const driverDetails = document.getElementById('driverDetails');
-                const noResults = document.getElementById('noResults');
-                driverDetails.innerHTML = '';
-                noResults.style.display = 'none';
+            .then(response => response.text())
+            .then(text => {
+                try {
+                    const results = JSON.parse(text);
+                    const driverDetails = document.getElementById('driverDetails');
+                    const noResults = document.getElementById('noResults');
+                    driverDetails.innerHTML = '';
+                    noResults.style.display = 'none';
 
-                if (!results || results.error || results.message || !Array.isArray(results) || results.length === 0) {
-                    noResults.style.display = 'block';
-                } else {
-                    results.forEach(driver => {
-                        const formattedFullName = driver.FullName
-                            .toLowerCase()
-                            .split(' ')
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                            .join(' ');
-
-                        driverDetails.innerHTML += `
-                            <div class="driver-info">
-                                <img src="${driver.ProfilePicture ? 'data:image/jpeg;base64,' + driver.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
-                                <div class="details">
-                                    <div class="detail-row">
-                                        <span class="detail-label"><strong>Driver ID:</strong></span>
-                                        <span class="detail-value">${driver.DriverID}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <span class="detail-label"><strong>User ID:</strong></span>
-                                        <span class="detail-value">${driver.UserID}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <span class="detail-label"><strong>Full Name:</strong></span>
-                                        <span class="detail-value">${formattedFullName}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <span class="detail-label"><strong>Username:</strong></span>
-                                        <span class="detail-value">${driver.Username}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <span class="detail-label"><strong>Sticker Expiry:</strong></span>
-                                        <span class="detail-value">${driver.StickerExpDate}</span>
-                                    </div>
-                                    <div class="button-group">
-                                        <button class="button" onclick="window.location.href='editDri.php?driverID=${driver.DriverID}'">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button class="button" onclick="deleteDriver('${driver.DriverID}', '${driver.UserID}')">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
+                    if (!results || results.error || !Array.isArray(results) || results.length === 0) {
+                        noResults.style.display = 'block';
+                        updateTotalUsers(0);
+                    } else {
+                        originalDriverData = results;
+                        updateTotalUsers(results.length);
+                        renderDrivers();
+                    }
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    document.getElementById('noResults').style.display = 'block';
                 }
             })
             .catch(error => {
@@ -532,68 +604,34 @@
             }
         }
 
-        // Add this function to load all drivers when the page loads
         function loadAllDrivers() {
             fetch('fetchDris.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ criteria: 'all' }) // Send 'all' as criteria
+                body: JSON.stringify({ criteria: 'all' })
             })
-            .then(response => response.json())
-            .then(results => {
-                const driverDetails = document.getElementById('driverDetails');
-                const noResults = document.getElementById('noResults');
-                driverDetails.innerHTML = '';
-                noResults.style.display = 'none';
+            .then(response => response.text())
+            .then(text => {
+                try {
+                    const results = JSON.parse(text);
+                    const driverDetails = document.getElementById('driverDetails');
+                    const noResults = document.getElementById('noResults');
+                    driverDetails.innerHTML = '';
+                    noResults.style.display = 'none';
 
-                if (!results || results.error || !Array.isArray(results) || results.length === 0) {
-                    noResults.style.display = 'block';
-                } else {
-                    results.forEach(driver => {
-                        const formattedFullName = driver.FullName
-                            .toLowerCase()
-                            .split(' ')
-                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                            .join(' ');
-
-                        driverDetails.innerHTML += `
-                            <div class="driver-info">
-                                <img src="${driver.ProfilePicture ? 'data:image/jpeg;base64,' + driver.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
-                                <div class="details">
-                                    <div class="detail-row">
-                                        <span class="detail-label"><strong>Driver ID:</strong></span>
-                                        <span class="detail-value">${driver.DriverID}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <span class="detail-label"><strong>User ID:</strong></span>
-                                        <span class="detail-value">${driver.UserID}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <span class="detail-label"><strong>Full Name:</strong></span>
-                                        <span class="detail-value">${formattedFullName}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <span class="detail-label"><strong>Username:</strong></span>
-                                        <span class="detail-value">${driver.Username}</span>
-                                    </div>
-                                    <div class="detail-row">
-                                        <span class="detail-label"><strong>Sticker Expiry:</strong></span>
-                                        <span class="detail-value">${driver.StickerExpDate}</span>
-                                    </div>
-                                    <div class="button-group">
-                                        <button class="button" onclick="window.location.href='editDri.php?driverID=${driver.DriverID}'">
-                                            <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button class="button" onclick="deleteDriver('${driver.DriverID}', '${driver.UserID}')">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
+                    if (!results || results.error || !Array.isArray(results) || results.length === 0) {
+                        noResults.style.display = 'block';
+                        updateTotalUsers(0);
+                    } else {
+                        originalDriverData = results;
+                        updateTotalUsers(results.length);
+                        renderDrivers();
+                    }
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    document.getElementById('noResults').style.display = 'block';
                 }
             })
             .catch(error => {
@@ -602,8 +640,174 @@
             });
         }
 
-        // Call the function when the page loads
-        window.onload = loadAllDrivers;
+        function validateDateRange() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const dateError = document.getElementById('dateError');
+            const searchButton = document.querySelector('.button');
+
+            if (startDate && endDate) {
+                if (new Date(endDate) < new Date(startDate)) {
+                    dateError.textContent = 'End date must be after start date';
+                    searchButton.disabled = true;
+                    return false;
+                } else {
+                    dateError.textContent = '';
+                    searchButton.disabled = false;
+                    // Format dates to match MySQL format (YYYY-MM-DD)
+                    document.getElementById('startDate').value = new Date(startDate).toISOString().split('T')[0];
+                    document.getElementById('endDate').value = new Date(endDate).toISOString().split('T')[0];
+                    return true;
+                }
+            }
+            return true;
+        }
+
+        let sortOrder = 'asc';
+        let sortCriterion = 'fullName';
+        let isTableView = false;
+        let originalDriverData = [];
+
+        function toggleSortOrder(criterion) {
+            if (sortCriterion === criterion) {
+                sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortCriterion = criterion;
+                sortOrder = 'asc';
+            }
+            sortDrivers();
+        }
+
+        function toggleViewStyle() {
+            isTableView = !isTableView;
+            renderDrivers();
+        }
+
+        function sortDrivers() {
+            originalDriverData.sort((a, b) => {
+                let valueA, valueB;
+
+                if (sortCriterion === 'driverID') {
+                    valueA = a.DriverID;
+                    valueB = b.DriverID;
+                } else if (sortCriterion === 'userID') {
+                    valueA = a.UserID;
+                    valueB = b.UserID;
+                } else if (sortCriterion === 'stickerExpiry') {
+                    valueA = new Date(a.StickerExpDate);
+                    valueB = new Date(b.StickerExpDate);
+                    return sortOrder === 'asc' ? valueA - valueB : valueB - valueA;
+                } else {
+                    valueA = a.FullName.toUpperCase();
+                    valueB = b.FullName.toUpperCase();
+                }
+
+                if (sortOrder === 'asc') {
+                    return valueA.localeCompare(valueB);
+                } else {
+                    return valueB.localeCompare(valueA);
+                }
+            });
+
+            renderDrivers();
+        }
+
+        function renderDrivers() {
+            const driverDetails = document.getElementById('driverDetails');
+            driverDetails.innerHTML = '';
+
+            if (isTableView) {
+                let tableHTML = `
+                    <table>
+                        <tr>
+                            <th>No</th>
+                            <th>Driver ID</th>
+                            <th>User ID</th>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Sticker Expiry</th>
+                            <th>Actions</th>
+                        </tr>`;
+                
+                originalDriverData.forEach((driver, index) => {
+                    const formattedFullName = driver.FullName
+                        .toLowerCase()
+                        .split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
+                    
+                    tableHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${driver.DriverID}</td>
+                            <td>${driver.UserID}</td>
+                            <td>${formattedFullName}</td>
+                            <td>${driver.Username}</td>
+                            <td>${driver.StickerExpDate}</td>
+                            <td>
+                                <button class="button" onclick="window.location.href='editDri.php?driverID=${driver.DriverID}'">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="button" onclick="deleteDriver('${driver.DriverID}', '${driver.UserID}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </td>
+                        </tr>`;
+                });
+                tableHTML += '</table>';
+                driverDetails.innerHTML = tableHTML;
+            } else {
+                // Profile view rendering
+                originalDriverData.forEach(driver => {
+                    const formattedFullName = driver.FullName
+                        .toLowerCase()
+                        .split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
+
+                    driverDetails.innerHTML += `
+                        <div class="driver-info">
+                            <img src="${driver.ProfilePicture ? 'data:image/jpeg;base64,' + driver.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
+                            <div class="details">
+                                <div class="detail-row">
+                                    <span class="detail-label"><strong>Driver ID:</strong></span>
+                                    <span class="detail-value">${driver.DriverID}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label"><strong>User ID:</strong></span>
+                                    <span class="detail-value">${driver.UserID}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label"><strong>Full Name:</strong></span>
+                                    <span class="detail-value">${formattedFullName}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label"><strong>Username:</strong></span>
+                                    <span class="detail-value">${driver.Username}</span>
+                                </div>
+                                <div class="detail-row">
+                                    <span class="detail-label"><strong>Sticker Expiry:</strong></span>
+                                    <span class="detail-value">${driver.StickerExpDate}</span>
+                                </div>
+                                <div class="button-group">
+                                    <button class="button" onclick="window.location.href='editDri.php?driverID=${driver.DriverID}'">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="button" onclick="deleteDriver('${driver.DriverID}', '${driver.UserID}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // Add this function to update total users count
+        function updateTotalUsers(count) {
+            document.getElementById('totalUsers').innerHTML = `<strong>Total matching users: ${count}</strong>`;
+        }
     </script>
 </body>
 </html> 

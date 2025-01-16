@@ -404,7 +404,7 @@ if ($driverID) {
                     <div class="password-field">
                         <input type="password" class="field-value" id="secQues1" name="secQues1" 
                                placeholder="Enter new answer (leave blank to keep current)"
-                               maxLength="30" required>
+                               maxLength="30">
                         <button type="button" class="toggle-password" onclick="togglePassword('secQues1')">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -434,7 +434,7 @@ if ($driverID) {
                     <div class="password-field">
                         <input type="password" class="field-value" id="secQues2" name="secQues2" 
                                placeholder="Enter new answer (leave blank to keep current)"
-                               maxLength="50" required>
+                               maxLength="50">
                         <button type="button" class="toggle-password" onclick="togglePassword('secQues2')">
                             <i class="fas fa-eye"></i>
                         </button>
