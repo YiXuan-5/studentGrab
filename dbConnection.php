@@ -15,11 +15,11 @@ try {
 
 } catch (mysqli_sql_exception $e) {
     // Handle the exception and show a custom error message
-    echo "Connection to database " . $localhost_dbnameMe . " for IP address 192.168.193.5 failed<br> Please check your database credentials or the connectivity.";
+    echo "Connection to database " . $localhost_dbnameMe . " for IP address 192.168.214.5 failed<br> Please check your database credentials or the connectivity.";
 }
 
 
-/* 
+/*
 $connMe = new mysqli($servernameMe, $usernameMe, $passwordMe,$localhost_dbnameMe);
 
 // Check connection
@@ -31,7 +31,7 @@ if ($connMe->connect_error) {
 */
 /*
 //Aishah db connection
-$servernameAishah = "192.168.193.55";
+$servernameAishah = "192.168.214.55";
 $usernameAishah = "wong";
 $passwordAishah = "abc123";
 $localhost_dbnameAishah = "workshop2"; 
@@ -48,7 +48,7 @@ try {
 */
 /*
 //Aimi db connection
-$host = "192.168.193.196";
+$host = "192.168.214.196";
 $port = "5432";
 $dbname = "UTeM_Peer_Rides_System"; // Replace with your database name
 $user = "WONG";          // Replace with your PostgreSQL username
@@ -67,7 +67,7 @@ try {
 */
 //Zul db connection
 /*
-$servernameZul = "192.168.193.254";
+$servernameZul = "192.168.214.254";
 $usernameZul = "wong";
 $passwordZul = "abc123";
 $localhost_dbnameZul = "peerride"; 

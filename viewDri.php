@@ -315,6 +315,7 @@
                 <label for="criteria">Select Criteria:</label>
                 <select id="criteria" onchange="showInputFields()">
                     <option value="">Select...</option>
+                    <option value="all">All</option>
                     <option value="driverID">Driver ID</option>
                     <option value="username">Username</option>
                     <option value="gender">Gender</option>
@@ -428,6 +429,12 @@
                 gender: gender,
                 availability: availability
             };
+
+            // If "All" is selected, call loadAllDrivers directly
+            if (criteria === 'all') {
+                loadAllDrivers();
+                return;
+            }
 
             fetch('fetchDris.php', {
                 method: 'POST',

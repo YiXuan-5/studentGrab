@@ -13,7 +13,7 @@ $email = $data['email'] ?? '';
 $securityCode = $data['securityCode'] ?? '';
 
 $response = [];
-//Check the email and security code are valid or not that entered in registration page
+
 if (!empty($email) && !empty($securityCode)) {
     // Query to validate security code based on email
     $stmt = $connMe->prepare("SELECT * FROM USER WHERE EmailAddress = ? AND EmailSecCode = ?");

@@ -14,7 +14,7 @@ $data = json_decode(file_get_contents('php://input'), true);
 try {
     $connMe->begin_transaction();
 
-    // First, check if user has other roles (PASSENGER or DRIVER)
+    // Check if user has other roles (PASSENGER or DRIVER)
     $stmt = $connMe->prepare("
         SELECT 
             UserType,
@@ -29,7 +29,15 @@ try {
     $result = $stmt->get_result();
     $userInfo = $result->fetch_assoc();
 
-    // Delete from ADMIN table first
+    // Delete from MODERATION table first
+    $stmt = $connAimi->prepare("DELETE FROM MODERATION WHERE AdminID = ?");
+    $stmt->bind_param("s", $_SESSION['AdminID']);
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to delete admin record");
+    }
+
+    // Delete from ADMIN table 
     $stmt = $connMe->prepare("DELETE FROM ADMIN WHERE AdminID = ? AND UserID = ?");
     $stmt->bind_param("ss", $_SESSION['AdminID'], $_SESSION['UserID']);
     
@@ -78,4 +86,5 @@ try {
 }
 
 $connMe->close();
+$connAimi->close();
 ?> 

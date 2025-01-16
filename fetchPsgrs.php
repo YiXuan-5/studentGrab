@@ -25,8 +25,6 @@ if (!$data || !isset($data['criteria'])) {
 // Prepare the SQL query based on the criteria
 $criteria = $data['criteria'];
 
-//When loading all passengers, it still trying to access array keys that might not be set in the request data.
-//So use if statement to check if the key is set before accessing it.
 // Only set these variables if not loading all records
 if ($criteria !== 'all') {
     $passengerID = isset($data['psgrID']) ? $data['psgrID'] : '';

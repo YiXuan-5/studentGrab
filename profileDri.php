@@ -2286,16 +2286,8 @@ try {
 
         // Add these functions to handle vehicle modal closing
         function closeAddVehicleModal() {
-            // Reset form values to empty
-            document.getElementById('addModel').value = '';
-            document.getElementById('addPlateNo').value = '';
-            document.getElementById('addColor').value = '';
-            document.getElementById('addAvailableSeat').value = '';
-            document.getElementById('addYearManufacture').value = '';
-            
-            // Clear any error messages
-            const errorElements = document.getElementById('addVehicleForm').querySelectorAll('.error');
-            errorElements.forEach(element => element.textContent = '');
+            // Reset form
+            document.getElementById('addVehicleForm').reset();
             
             // Hide modal
             document.getElementById('addVehicleModal').style.display = 'none';

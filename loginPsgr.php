@@ -256,13 +256,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 //
                 setTimeout(() => {
                     
-                    //window.location.href = "http://192.168.193.55/workshop2/uprs/homePagePass.php"; // Redirect to next page
+                    //window.location.href = "http://192.168.214.55/workshop2/uprs/homePagePass.php"; // Redirect to next page
                     
                     //window.location.href = "profilePsgr.php"
                    // After successful login
-                   window.location.href = "http://192.168.193.196/submitRating.php?UserID=<?php echo $_SESSION['UserID']; ?>&PsgrID=<?php echo $_SESSION['PsgrID']; ?>"
+                   
+                   window.location.href = "http://192.168.214.55/workshop2/uprs/homePagePass.php?UserID=<?php echo $_SESSION['UserID']; ?>&PsgrID=<?php echo $_SESSION['PsgrID']; ?>"
 
-                    //window.location.href = "http://192.168.193.196/submitFeedback.php";
+                    //window.location.href = "http://192.168.214.196/submitFeedback.php";
                     
                 }, 2000); //2000ms = 2s to wait bfr move to next page
             } else {

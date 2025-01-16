@@ -3,6 +3,6 @@
 session_start();
 //session_destroy(): Destroys all data registered to a session
 session_destroy();
-header("Location: mainPage.html");
+header("Location: mainPageAdm.html");
 exit;
 ?> 

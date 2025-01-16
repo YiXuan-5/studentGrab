@@ -268,6 +268,61 @@
                 gap: 15px;
             }
 
+            .result-header {
+                display: flex;
+                align-items: center;
+                gap: 30px; /* Add gap between sorting criteria */
+                margin-bottom: 10px; /* Optional: Add some margin below the header */
+            }
+
+            .header-label {
+                display: flex;
+                align-items: center;
+                gap: 5px; /* Add space between label and icon */
+            }
+
+            .header-label i {
+                cursor: pointer; /* Change cursor to pointer for better usability */
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse; /* Ensures borders are shared between cells */
+            }
+
+            th, td {
+                border: 1px solid #ddd; /* Adds border to table cells */
+                padding: 8px; /* Adds padding for better readability */
+                text-align: left; /* Aligns text to the left */
+            }
+
+            th {
+                background-color: #4caf50; /* Green background for headers */
+                color: white; /* White font color for headers */
+            }
+
+            table td .button {
+                padding: 5px 10px;
+                margin: 2px;
+                font-size: 14px;
+            }
+
+            table td {
+                vertical-align: middle;
+            }
+
+            /* Adjust the actions column width */
+            table th:last-child,
+            table td:last-child {
+                min-width: 160px;
+                text-align: center;
+            }
+
+            /* Add hover effect to table rows */
+            table tr:hover {
+                background-color: #f5f5f5;
+            }
+
         </style>
     </head>
     <body>
@@ -306,6 +361,7 @@
                     <label for="criteria">Select Criteria:</label>
                     <select id="criteria" onchange="showInputFields()">
                         <option value="">Select...</option>
+                        <option value="all">All</option>
                         <option value="psgrID">Passenger ID</option>
                         <option value="role">Role</option>
                         <option value="username">Username</option>
@@ -381,7 +437,19 @@
             <!-- Right Section for Passenger Results -->
             <div class="right-section">
                 <h2 class="section-title">Passenger Matching Result</h2>
+                <div id="totalUsers" style="font-size: 16px; color: #4caf50; margin-bottom: 15px;">
+                    <strong>Total matching users: 0</strong>
+                </div>
                 <div id="resultContainer" class="result-container">
+                    <div class="result-header">
+                        <span class="header-label"><strong>Passenger ID</strong></span>
+                        <i class="fas fa-sort" onclick="toggleSortOrder('psgrID')"></i>
+                        <span class="header-label"><strong>User ID</strong></span>
+                        <i class="fas fa-sort" onclick="toggleSortOrder('userID')"></i>
+                        <span class="header-label"><strong>Full Name</strong></span>
+                        <i class="fas fa-sort" onclick="toggleSortOrder('fullName')"></i>
+                        <i class="fas fa-table" onclick="toggleViewStyle()" title="Toggle Table View"></i>
+                    </div>
                     <div id="psgrDetails"></div>
                     <div id="noResults" class="no-results" style="display: none;">Results not found</div>
                 </div>
@@ -389,6 +457,140 @@
         </div>
 
         <script>
+            let sortOrder = 'asc';
+            let sortCriterion = 'fullName';
+            let isTableView = false; // Default to profile view
+            let originalPassengerData = []; // Add this at the top with other variables
+
+            function toggleSortOrder(criterion) {
+                console.log(`Sorting by: ${criterion}`); // Debug log
+                if (sortCriterion === criterion) {
+                    sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortCriterion = criterion;
+                    sortOrder = 'asc';
+                }
+                sortPassengers();
+            }
+
+            function toggleViewStyle() {
+                isTableView = !isTableView;
+                renderPassengers();
+            }
+
+            function renderPassengers() {
+                const psgrDetails = document.getElementById('psgrDetails');
+                psgrDetails.innerHTML = '';
+
+                if (isTableView) {
+                    let tableHTML = `
+                        <table>
+                            <tr>
+                                <th>No</th>
+                                <th>Passenger ID</th>
+                                <th>User ID</th>
+                                <th>Full Name</th>
+                                <th>Username</th>
+                                <th>Actions</th>
+                            </tr>`;
+                    
+                    originalPassengerData.forEach((passenger, index) => {
+                        const formattedFullName = passenger.FullName
+                            .toLowerCase()
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+                        
+                        tableHTML += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${passenger.PsgrID}</td>
+                                <td>${passenger.UserID}</td>
+                                <td>${formattedFullName}</td>
+                                <td>${passenger.Username}</td>
+                                <td>
+                                    <button class="button" onclick="window.location.href='editPsgr.php?passengerID=${passenger.PsgrID}'">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="button" onclick="deletePassenger('${passenger.PsgrID}', '${passenger.UserID}')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </td>
+                            </tr>`;
+                    });
+                    tableHTML += '</table>';
+                    psgrDetails.innerHTML += tableHTML;
+                } else {
+                    originalPassengerData.forEach(passenger => {
+                        const formattedFullName = passenger.FullName
+                            .toLowerCase()
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
+
+                        psgrDetails.innerHTML += `
+                            <div class="passenger-info">
+                                <img src="${passenger.ProfilePicture ? 'data:image/jpeg;base64,' + passenger.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
+                                <div class="details">
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Passenger ID:</strong></span>
+                                        <span class="detail-value">${passenger.PsgrID}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>User ID:</strong></span>
+                                        <span class="detail-value">${passenger.UserID}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Full Name:</strong></span>
+                                        <span class="detail-value">${formattedFullName}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Username:</strong></span>
+                                        <span class="detail-value">${passenger.Username}</span>
+                                    </div>
+                                    <div class="button-group">
+                                        <button class="button" onclick="window.location.href='editPsgr.php?passengerID=${passenger.PsgrID}'">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="button" onclick="deletePassenger('${passenger.PsgrID}', '${passenger.UserID}')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            }
+
+            function sortPassengers() {
+                console.log(`Sorting order: ${sortOrder}`);
+                
+                originalPassengerData.sort((a, b) => {
+                    let valueA, valueB;
+
+                    if (sortCriterion === 'psgrID') {
+                        valueA = a.PsgrID;
+                        valueB = b.PsgrID;
+                    } else if (sortCriterion === 'userID') {
+                        valueA = a.UserID;
+                        valueB = b.UserID;
+                    } else {
+                        // For fullName
+                        valueA = a.FullName.toUpperCase();
+                        valueB = b.FullName.toUpperCase();
+                    }
+
+                    if (sortOrder === 'asc') {
+                        return valueA.localeCompare(valueB);
+                    } else {
+                        return valueB.localeCompare(valueA);
+                    }
+                });
+
+                renderPassengers();
+            }
+
             function showInputFields() {
                 const criteria = document.getElementById('criteria').value;
                 const inputFields = document.getElementById('inputFields');
@@ -419,6 +621,10 @@
                 } else if (criteria === 'dropoffLocation') {
                     document.getElementById('dropoffLocationField').style.display = 'block';
                 }
+            }
+
+            function updateTotalUsers(count) {
+                document.getElementById('totalUsers').innerHTML = `<strong>Total matching users: ${count}</strong>`;
             }
 
             function searchPassengers() {
@@ -454,6 +660,12 @@
                     gender: gender
                 };
 
+                // If "All" is selected, call loadAllPassengers directly
+                if (criteria === 'all') {
+                    loadAllPassengers();
+                    return;
+                }
+
                 fetch('fetchPsgrs.php', {
                     method: 'POST',
                     headers: {
@@ -486,54 +698,13 @@
                     psgrDetails.innerHTML = '';
                     noResults.style.display = 'none';
 
-                    // Check if the results are empty or not an array
-                    if (!results || results.error || results.message || !Array.isArray(results) || results.length === 0) {
-                        console.log('No results condition met:', results);
+                    if (!results || results.error || !Array.isArray(results) || results.length === 0) {
                         noResults.style.display = 'block';
+                        updateTotalUsers(0);
                     } else {
-                        // If results is an array, process each passenger
-                        results.forEach(passenger => {
-                            // Format the full name to capitalize first letter of each word
-                            const formattedFullName = passenger.FullName
-                                .toLowerCase()
-                                .split(' ') // .split(' ') means split the string into an array of words
-                                .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // .map(word => word.charAt(0).toUpperCase() + word.slice(1)) means map each word to its first letter capitalized and the rest of the word
-                                .join(' '); // .join(' ') means join the array of words back into a string
-
-                            console.log('Processing passenger:', passenger);
-                            //Display the passenger details in the result container
-                            psgrDetails.innerHTML += `
-                                <div class="passenger-info">
-                                    <img src="${passenger.ProfilePicture ? 'data:image/jpeg;base64,' + passenger.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
-                                    <div class="details">
-                                        <div class="detail-row">
-                                            <span class="detail-label"><strong>Passenger ID:</strong></span>
-                                            <span class="detail-value">${passenger.PsgrID}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="detail-label"><strong>User ID:</strong></span>
-                                            <span class="detail-value">${passenger.UserID}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="detail-label"><strong>Full Name:</strong></span>
-                                            <span class="detail-value">${formattedFullName}</span>
-                                        </div>
-                                        <div class="detail-row">
-                                            <span class="detail-label"><strong>Username:</strong></span>
-                                            <span class="detail-value">${passenger.Username}</span>
-                                        </div>
-                                        <div class="button-group">
-                                            <button class="button" onclick="window.location.href='editPsgr.php?passengerID=${passenger.PsgrID}'">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </button>
-                                            <button class="button" onclick="deletePassenger('${passenger.PsgrID}', '${passenger.UserID}')">
-                                                <i class="fas fa-trash"></i> Delete
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        });
+                        originalPassengerData = results;
+                        updateTotalUsers(results.length);
+                        renderPassengers();
                     }
                 })
                 .catch(error => {
@@ -577,7 +748,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ criteria: 'all' }) // Send 'all' as criteria
+                    body: JSON.stringify({ criteria: 'all' })
                 })
                 .then(response => response.text())
                 .then(text => {
@@ -590,46 +761,11 @@
 
                         if (!results || results.error || !Array.isArray(results) || results.length === 0) {
                             noResults.style.display = 'block';
+                            updateTotalUsers(0);
                         } else {
-                            results.forEach(passenger => {
-                                const formattedFullName = passenger.FullName
-                                    .toLowerCase()
-                                    .split(' ')
-                                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                                    .join(' ');
-
-                                psgrDetails.innerHTML += `
-                                    <div class="passenger-info">
-                                        <img src="${passenger.ProfilePicture ? 'data:image/jpeg;base64,' + passenger.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
-                                        <div class="details">
-                                            <div class="detail-row">
-                                                <span class="detail-label"><strong>Passenger ID:</strong></span>
-                                                <span class="detail-value">${passenger.PsgrID}</span>
-                                            </div>
-                                            <div class="detail-row">
-                                                <span class="detail-label"><strong>User ID:</strong></span>
-                                                <span class="detail-value">${passenger.UserID}</span>
-                                            </div>
-                                            <div class="detail-row">
-                                                <span class="detail-label"><strong>Full Name:</strong></span>
-                                                <span class="detail-value">${formattedFullName}</span>
-                                            </div>
-                                            <div class="detail-row">
-                                                <span class="detail-label"><strong>Username:</strong></span>
-                                                <span class="detail-value">${passenger.Username}</span>
-                                            </div>
-                                            <div class="button-group">
-                                                <button class="button" onclick="window.location.href='editPsgr.php?passengerID=${passenger.PsgrID}'">
-                                                    <i class="fas fa-edit"></i> Edit
-                                                </button>
-                                                <button class="button" onclick="deletePassenger('${passenger.PsgrID}', '${passenger.UserID}')">
-                                                    <i class="fas fa-trash"></i> Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                `;
-                            });
+                            originalPassengerData = results;
+                            updateTotalUsers(results.length);
+                            renderPassengers();
                         }
                     } catch (e) {
                         console.error('JSON parse error:', e);
