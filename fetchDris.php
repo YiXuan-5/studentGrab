@@ -170,7 +170,7 @@ try {
             echo json_encode(['message' => 'No drivers found']);
             exit;
         }
-    } else if ($criteria === 'stickerExpiry' || $criteria === 'stickerExpDate') {
+    } else if ($criteria === 'stickerExpiry') {
         $query = "
             SELECT d.DriverID, d.UserID, d.Username, 
                    u.FullName, u.ProfilePicture, d.StickerExpDate

@@ -529,7 +529,7 @@
             };
 
             // Handle sticker expiry date range
-            if (criteria === 'stickerExpiry' || criteria === 'stickerExpDate') {
+            if (criteria === 'stickerExpiry') {
                 const startDate = document.getElementById('startDate').value;
                 const endDate = document.getElementById('endDate').value;
                 
