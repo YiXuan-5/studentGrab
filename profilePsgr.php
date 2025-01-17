@@ -578,7 +578,7 @@ try {
     <nav class="navbar">
         <!-- Left side - Home -->
         <div class="nav-items">
-            <a href="homePagePsgr.php" class="nav-item">
+            <a href="http://192.168.214.55/workshop2/uprs/homePagePass.php?UserID=<?php echo $_SESSION['UserID']; ?>&PsgrID=<?php echo $_SESSION['PsgrID']; ?>" class="nav-item">
                 <i class="fas fa-home"></i>
                 Home
             </a>

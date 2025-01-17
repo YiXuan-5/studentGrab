@@ -3,6 +3,7 @@
 
 session_start(); // Start the session
 include 'dbConnection.php'; // Include database connection
+include 'auditLog.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Validate POST parameters when sending request to HTTP server
@@ -32,11 +33,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $row = $result->fetch_assoc(); // fetches a result row as an associative array.
         $_SESSION['DriverID'] = $row['DriverID']; //store in Session array to bring to next page
         $_SESSION['UserID'] = $row['UserID'];
+        
+        // Log successful login
+        logUserActivity($row['UserID'], 'DRIVER', 'LOGIN', 'SUCCESS');
 
-        echo "success"; // Plain text response
+        // Return JSON response instead of plain text
+        echo json_encode([
+            'status' => 'success',
+            'redirect' => "profileDri.php"
+            //'redirect' => "http://192.168.214.55/workshop2/uprs/homePageDriv.php?UserID=" . $row['UserID'] . "&DriverID=" . $row['DriverID']
+        ]);
     } else {
+        // Log failed login attempt
+        if (isset($_POST['driUsername'])) {
+            // Get UserID from username if possible
+            $stmtCheck = $connMe->prepare("SELECT UserID FROM DRIVER WHERE Username = ?");
+            $stmtCheck->bind_param("s", $_POST['driUsername']);
+            $stmtCheck->execute();
+            $resultCheck = $stmtCheck->get_result();
+            if ($resultCheck->num_rows === 1) {
+                $row = $resultCheck->fetch_assoc();
+                logUserActivity($row['UserID'], 'DRIVER', 'LOGIN', 'FAILED');
+            } else {
+                // If username doesn't exist, log with a special UserID
+                logUserActivity('NA', 'DRIVER', 'LOGIN', 'FAILED');
+            }
+            $stmtCheck->close();
+        }
+
         // Login failed
-        echo "Wrong username or password."; // Plain text response
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Wrong username or password.'
+        ]);
     }
 
     $stmt->close(); // Close statement
@@ -233,21 +262,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         })
         //.then(): response text returned from the PHP backend
         //converts the PHP response into plain text 
-        .then(response => response.text()) 
+        .then(response => response.json())  // Change to parse JSON instead of text
         .then(data => {
-            if (data.trim() === "success") {
+            if (data.status === 'success') {
                 // Handle success
                 messageDiv.textContent = "Dear driver, login successful!";
                 messageDiv.style.color = "green";
-                //
                 setTimeout(() => {
-                    
-                    
-                    window.location.href = "profileDri.php";
-                }, 2000); //2000ms = 2s to wait bfr move to next page
+                    window.location.href = data.redirect;
+                }, 2000);
             } else {
                 // Handle error
-                messageDiv.textContent = data; // Display the error message
+                messageDiv.textContent = data.message;
                 messageDiv.style.color = "red";
             }
         })

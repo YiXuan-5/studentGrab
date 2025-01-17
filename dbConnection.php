@@ -29,7 +29,7 @@ if ($connMe->connect_error) {
 }
 
 */
-/*
+
 //Aishah db connection
 $servernameAishah = "192.168.214.55";
 $usernameAishah = "wong";
@@ -45,8 +45,8 @@ try {
     // Handle the exception and show a custom error message
     echo "Connection to database " . $localhost_dbnameAishah . " for IP address " . $servernameAishah . "failed<br> Please check database credentials or the connectivity.";
 }
-*/
-/*
+
+
 //Aimi db connection
 $host = "192.168.214.196";
 $port = "5432";
@@ -64,10 +64,10 @@ try {
 } catch (PDOException $e) {
     echo "Connection to database " . $dbname . " for IP address " . $host . "failed<br> Please check database credentials or the connectivity.";
 }
-*/
+
 //Zul db connection
 /*
-$servernameZul = "192.168.214.254";
+$servernameZul = "192.168.214.166";
 $usernameZul = "wong";
 $passwordZul = "abc123";
 $localhost_dbnameZul = "peerride"; 

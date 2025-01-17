@@ -685,7 +685,7 @@ try {
     <div class="navbar">
         <!-- Left side - Home -->
         <div class="nav-items">
-            <a href="homePageDri.php" class="nav-item">
+            <a href="http://192.168.214.55/workshop2/uprs/homePageDriv.php?UserID=<?php echo $_SESSION['UserID']; ?>&DriverID=<?php echo $_SESSION['DriverID']; ?>" class="nav-item">
                 <i class="fas fa-home"></i>
                 Home
             </a>

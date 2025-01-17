@@ -2,6 +2,7 @@
 /*php code*/
 session_start(); // Start the session
 include 'dbConnection.php'; // Include database connection
+include 'auditLog.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Validate POST parameters when sending request to HTTP server
@@ -29,30 +30,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($result->num_rows === 1) {
         // Successful login
-        $row = $result->fetch_assoc(); // fetches a result row as an associative array.
+        $row = $result->fetch_assoc();// fetches a result row as an associative array.
         $_SESSION['PsgrID'] = $row['PsgrID']; //store in Session array to bring to next page
         $_SESSION['UserID'] = $row['UserID'];
-
-        echo "success"; // Plain text response
-        // Return success with session data as JSON
-        /*echo json_encode([
-            "status" => "success",
-            "UserID" => $_SESSION['UserID'],
-            "PsgrID" => $_SESSION['PsgrID']
-        ]);
-        */
         
-    } else {
-        // Login failed
-        echo "Wrong username or password."; // Plain text response
-        /*echo json_encode([
-            "status" => "error",
-            "message" => "Wrong username or password."
+        // Log successful login
+        logUserActivity($row['UserID'], 'PASSENGER', 'LOGIN', 'SUCCESS');
+        
+        // Return JSON response instead of plain text
+        echo json_encode([
+            'status' => 'success',
+            'redirect' => "http://192.168.214.55/workshop2/uprs/homePagePass.php?UserID=" . $row['UserID'] . "&PsgrID=" . $row['PsgrID']
         ]);
-        */
+    } else {
+        // Log failed login attempt
+        if (isset($_POST['psgrUsername'])) {
+            // Get UserID from username if possible
+            $stmtCheck = $connMe->prepare("SELECT UserID FROM PASSENGER WHERE Username = ?");
+            $stmtCheck->bind_param("s", $_POST['psgrUsername']);
+            $stmtCheck->execute();
+            $resultCheck = $stmtCheck->get_result();
+            if ($resultCheck->num_rows === 1) {
+                $row = $resultCheck->fetch_assoc();
+                logUserActivity($row['UserID'], 'PASSENGER', 'LOGIN', 'FAILED');
+            } else {
+                // If username doesn't exist, log with a special UserID
+                logUserActivity('NA', 'PASSENGER', 'LOGIN', 'FAILED');
+            }
+            $stmtCheck->close();
+        }
+        
+        // Return error response
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Wrong username or password.'
+        ]);
     }
 
-    $stmt->close(); // Close statement
+    $stmt->close(); // Close the original login statement
     $connMe->close(); // Close connection
     exit;
 }
@@ -246,30 +261,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         })
         //.then(): response text returned from the PHP backend
         //converts the PHP response into plain text 
-        .then(response => response.text()) 
+        .then(response => response.json())  // Change to parse JSON instead of text
         .then(data => {
-            
-            if (data.trim() === "success") {
+            if (data.status === 'success') {
                 // Handle success
                 messageDiv.textContent = "Dear passenger, login successful!";
                 messageDiv.style.color = "green";
-                //
                 setTimeout(() => {
-                    
-                    //window.location.href = "http://192.168.214.55/workshop2/uprs/homePagePass.php"; // Redirect to next page
-                    
-                    //window.location.href = "profilePsgr.php"
-                   // After successful login
-                   
-                   window.location.href = "http://192.168.214.55/workshop2/uprs/homePagePass.php?UserID=<?php echo $_SESSION['UserID']; ?>&PsgrID=<?php echo $_SESSION['PsgrID']; ?>"
-
-                    //window.location.href = "http://192.168.214.196/submitFeedback.php";
-                    
-                }, 2000); //2000ms = 2s to wait bfr move to next page
+                    window.location.href = data.redirect;
+                }, 2000);
             } else {
                 // Handle error
-                messageDiv.textContent = data; // Display the error message
-            
+                messageDiv.textContent = data.message;
                 messageDiv.style.color = "red";
             }
         })

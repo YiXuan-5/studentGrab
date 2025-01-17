@@ -3,6 +3,7 @@
 
 session_start(); // Start the session
 include 'dbConnection.php'; // Include database connection
+include 'auditLog.php';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Validate POST parameters when sending request to HTTP server
@@ -33,8 +34,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $_SESSION['AdminID'] = $row['AdminID']; //store in Session array to bring to next page
         $_SESSION['UserID'] = $row['UserID'];
 
+        // Log successful login
+        logUserActivity($row['UserID'], 'ADMIN', 'LOGIN', 'SUCCESS');
+
         echo "success"; // Plain text response
     } else {
+        // Log failed login attempt
+        if (isset($_POST['admUsername'])) {
+            // Get UserID from username if possible
+            $stmtCheck = $connMe->prepare("SELECT UserID FROM ADMIN WHERE Username = ?");
+            $stmtCheck->bind_param("s", $_POST['admUsername']);
+            $stmtCheck->execute();
+            $resultCheck = $stmtCheck->get_result();
+            if ($resultCheck->num_rows === 1) {
+                $row = $resultCheck->fetch_assoc();
+                logUserActivity($row['UserID'], 'ADMIN', 'LOGIN', 'FAILED');
+            } else {
+                // If username doesn't exist, log with a special UserID
+                logUserActivity('NA', 'ADMIN', 'LOGIN', 'FAILED');
+            }
+            $stmtCheck->close();
+        }
+        
         // Login failed
         echo "Wrong username or password."; // Plain text response
     }
