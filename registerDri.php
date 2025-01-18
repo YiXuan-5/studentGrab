@@ -258,8 +258,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <a href="loginDri.php" class="close-icon">✖</a>
         <h1>Registration Driver</h1>
 
-        <!-- Email and Phone Check Form -->
-        <form id="emailNPhoneForm" method="POST">
+        <!-- Add Matric Number Check Form -->
+        <form id="matricForm" method="POST">
+            <div class="form-group">
+                <label for="matricNo">Matric Number:</label>
+                <input type="text" id="matricNo" name="matricNo" maxLength="10" 
+                       placeholder="Enter your matric number" autocomplete="off" required>
+            </div>
+            <span id="matricError" class="error"></span>
+            <button type="submit" class="button" id="checkMatricButton">Check</button>
+        </form>
+
+        <!-- Email and Phone Check Form - Initially Hidden -->
+        <form id="emailNPhoneForm" method="POST" style="display: none;">
             <!-- Email Input -->
             <div class="form-group" id="emailStep" style="display: none;">
                 <label for="email">Email Address:</label>
@@ -299,6 +310,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <label for="fullName">Full Name:</label>
                     <input type="text" id="fullName" name="fullName" required autocomplete="off">
                 </div>
+                <div class="form-group">
+                    <label for="matricNoDisplay">Matric Number:</label>
+                    <input type="text" id="matricNoDisplay" name="matricNoDisplay" maxLength="10" 
+                         required autocomplete="off">
+                </div>
+                <span id="matricNoDisplayError" class="error"></span>
                 <div class="form-group">
                     <label for="emailChecked">Email Address:</label>
                     <!--readonly input attribute can allow the value to be passed when click submit button, compared to "disabled"-->
@@ -458,6 +475,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         const securityCodeInput = document.getElementById("securityCode");
         const securityCodeError = document.getElementById("securityCodeError");
         const validateSecCodeButton = document.getElementById("validateSecCodeButton");
+
+        const matricForm = document.getElementById("matricForm");
+        const matricNo = document.getElementById("matricNo");
+        const matricError = document.getElementById("matricError");
+        const matricNoDisplayError = document.getElementById("matricNoDisplayError");
+        const matricDisplayError = document.getElementById("matricDisplayError");
 
         let validEmail = null;
 
@@ -702,13 +725,20 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             const pwdValue = passwordInput.value.trim();
             const emailSecCodeValue = emailSecCodeInput.value.trim();
             const plateNo = document.getElementById('plateNo').value.trim();
+            const matricNoDisplay = document.getElementById('matricNoDisplay').value.trim();
 
             // Reset error messages
             pwdError.textContent = "";
             emailSecCodeError.textContent = "";
             document.getElementById('plateError').textContent = "";
+            // Don't reset matricNoDisplayError here since it's handled by the blur event
 
             let isValid = true;
+
+            // Check if there's an existing matric number error
+            if (matricNoDisplayError.textContent !== "") {
+                isValid = false;
+            }
 
             //Validate Security Code
             if(!/^(?=(.*[a-z]))(?=(.*[A-Z]))(?=(.*[0-9]))(?=(.*[!@#$%^&*]))[a-zA-Z0-9!@#$%^&*]{4,8}$/.test(emailSecCodeValue)){
@@ -809,6 +839,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
             } catch (error) {
                 console.error('Error:', error);
+            }
+        });
+
+        // Matric No validation
+        document.getElementById('matricNoDisplay').addEventListener('blur', async () => {
+            const matricNoDisplay = document.getElementById('matricNoDisplay').value.trim().toUpperCase();
+
+            //Check matric number format
+            if (!/^[BMD][01][0-9]{8}$/.test(matricNoDisplay)){
+                matricNoDisplayError.textContent = "Invalid matric number format.";
+                matricNoDisplayError.style.color = "red";
+                validateForm();
+                return;
+            }
+
+            try {
+                const response = await fetch('validateMatricNo.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ matricNoDisplay: matricNoDisplay})
+                });
+                const data = await response.json();
+                
+                if (data.status === 'exists') {
+                    matricNoDisplayError.textContent = "Matric number already exists.";
+                    matricNoDisplayError.style.color = "red";
+                    validateForm();
+                } else {
+                    matricNoDisplayError.textContent = "";
+                    matricNoDisplayError.style.color = "green";
+                    validateForm();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                matricNoDisplayError.textContent = "Error checking matric number.";
+                matricNoDisplayError.style.color = "red";
+                validateForm();
             }
         });
 
@@ -925,6 +994,41 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Add this after the license number validation
         document.getElementById('plateNo').addEventListener('input', (e) => {
             validateForm();
+        });
+
+        // Matric number validation
+        matricForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const matricValue = matricNo.value.trim().toUpperCase();
+            
+            // Check matric number format
+            // First character must be B, M, or D
+            // Second character must be 0 or 1
+            // Total length must be 10 characters
+            const matricRegex = /^[BMD][01][0-9]{8}$/;
+            
+            if (!matricRegex.test(matricValue)) {
+                matricError.textContent = "Invalid matric number format. Only UTeM students can become drivers.";
+                matricError.style.color = "red";
+                emailNPhoneForm.style.display = "none";
+                return;
+            }
+
+            // If format is correct, show email and phone form
+            matricError.textContent = "Valid matric number format!";
+            matricError.style.color = "green";
+
+            // Delay the display of the email and phone form by 1.5 seconds
+            setTimeout(() => {
+                emailNPhoneForm.style.display = "block";
+                matricForm.style.display = "none";
+            }, 1500);
+            
+            // Store matric number for later use
+            sessionStorage.setItem('matricNo', matricValue);
+
+            //Set the value of the matric number input in basic information
+            matricNoDisplay.value = sessionStorage.getItem('matricNo');
         });
     </script>
 </body>

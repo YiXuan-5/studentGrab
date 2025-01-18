@@ -95,9 +95,9 @@ try {
     
     if (!$isExistingUser) {
         // Insert into USER table first
-        $userStmt = $connMe->prepare("INSERT INTO USER (FullName, EmailAddress, EmailSecCode, PhoneNo, UserType, BirthDate, Gender, SecQues1, SecQues2) VALUES (?, UPPER(?), ?, ?, UPPER(?), ?, ?, ?, ?)");
+        $userStmt = $connMe->prepare("INSERT INTO USER (FullName, EmailAddress, EmailSecCode, PhoneNo, UserType, BirthDate, Gender, SecQues1, SecQues2, MatricNo) VALUES (?, UPPER(?), ?, ?, UPPER(?), ?, ?, ?, ?, UPPER(?))");
         
-        $userStmt->bind_param("sssssssss", 
+        $userStmt->bind_param("ssssssssss", 
             strtoupper($formData['fullName']),
             $formData['emailChecked'],
             $formData['emailSecCode'],
@@ -106,7 +106,8 @@ try {
             $formData['birthDate'],
             $gender,
             $formData['secQues1'],
-            $formData['secQues2']
+            $formData['secQues2'],
+            $formData['matricNo']
         );
         
         if (!$userStmt->execute()) {
