@@ -18,7 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $passwordAdm = $_POST['admPwd'];
 
     // Prepare and execute the SQL query
-    $stmt = $connMe->prepare("SELECT AdminID, UserID FROM ADMIN WHERE Username = ? AND Password = ?");
+    $stmt = $connMe->prepare("
+        SELECT a.AdminID, a.UserID 
+        FROM ADMIN a
+        JOIN USER u ON a.UserID = u.UserID 
+        WHERE a.Username = ? AND a.Password = ? AND u.Status = 'ACTIVE'
+    ");
     if (!$stmt) {
         echo "Database error."; // Plain text response
         exit;
@@ -33,31 +38,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $row = $result->fetch_assoc(); // fetches a result row as an associative array.
         $_SESSION['AdminID'] = $row['AdminID']; //store in Session array to bring to next page
         $_SESSION['UserID'] = $row['UserID'];
-
+        
         // Log successful login
         logUserActivity($row['UserID'], 'ADMIN', 'LOGIN', 'SUCCESS');
 
         echo "success"; // Plain text response
     } else {
-        // Log failed login attempt
-        if (isset($_POST['admUsername'])) {
-            // Get UserID from username if possible
-            $stmtCheck = $connMe->prepare("SELECT UserID FROM ADMIN WHERE Username = ?");
-            $stmtCheck->bind_param("s", $_POST['admUsername']);
-            $stmtCheck->execute();
-            $resultCheck = $stmtCheck->get_result();
-            if ($resultCheck->num_rows === 1) {
-                $row = $resultCheck->fetch_assoc();
-                logUserActivity($row['UserID'], 'ADMIN', 'LOGIN', 'FAILED');
-            } else {
-                // If username doesn't exist, log with a special UserID
-                logUserActivity('NA', 'ADMIN', 'LOGIN', 'FAILED');
-            }
-            $stmtCheck->close();
-        }
+        // Check if user exists but is deactivated
+        $checkStmt = $connMe->prepare("
+            SELECT a.UserID, u.Status 
+            FROM ADMIN a
+            JOIN USER u ON a.UserID = u.UserID 
+            WHERE a.Username = ? AND a.Password = ?
+        ");
+        $checkStmt->bind_param("ss", $usernameAdm, $passwordAdm);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
         
-        // Login failed
-        echo "Wrong username or password."; // Plain text response
+        if ($checkResult->num_rows === 1) {
+            $checkRow = $checkResult->fetch_assoc();
+            // Defined user but account is deactivated
+            if ($checkRow['Status'] === 'DEACTIVATED') {
+                // Login failed
+                echo "Your account has been deactivated. Please contact administrator."; // Plain text response
+                
+                logUserActivity($checkRow['UserID'], 'ADMIN', 'LOGIN', 'FAILED - ACCOUNT DEACTIVATED');
+            } else {
+                // Defined user but wrong password
+                // Login failed
+                echo "Wrong username or password."; // Plain text response
+                logUserActivity($checkRow['UserID'], 'ADMIN', 'LOGIN', 'FAILED');
+            }
+            $checkStmt->close();
+        } else {
+            // Undefined user login
+            // Log failed login attempt
+            logUserActivity('NA', 'ADMIN', 'LOGIN', 'FAILED');
+            // Login failed
+            echo "Wrong username or password."; // Plain text response
+        }
     }
 
     $stmt->close(); // Close statement

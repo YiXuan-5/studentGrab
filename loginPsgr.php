@@ -18,7 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $passwordPsgr = $_POST['psgrPwd'];
 
     // Prepare and execute the SQL query
-    $stmt = $connMe->prepare("SELECT PsgrID, UserID FROM PASSENGER WHERE Username = ? AND Password = ?");
+    $stmt = $connMe->prepare("
+        SELECT p.PsgrID, p.UserID 
+        FROM PASSENGER p
+        JOIN USER u ON p.UserID = u.UserID 
+        WHERE p.Username = ? AND p.Password = ? AND u.Status = 'ACTIVE'
+    ");
     if (!$stmt) {
         echo "Database error."; // Plain text response
         exit;
@@ -40,31 +45,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Return JSON response instead of plain text
         echo json_encode([
             'status' => 'success',
-            'redirect' => "http://192.168.214.55/workshop2/uprs/homePagePass.php?UserID=" . $row['UserID'] . "&PsgrID=" . $row['PsgrID']
+            'redirect' => "profilePsgr.php"
+            //'redirect' => "http://192.168.214.55/workshop2/uprs/homePagePass.php?UserID=" . $row['UserID'] . "&PsgrID=" . $row['PsgrID']
         ]);
     } else {
-        // Log failed login attempt
-        if (isset($_POST['psgrUsername'])) {
-            // Get UserID from username if possible
-            $stmtCheck = $connMe->prepare("SELECT UserID FROM PASSENGER WHERE Username = ?");
-            $stmtCheck->bind_param("s", $_POST['psgrUsername']);
-            $stmtCheck->execute();
-            $resultCheck = $stmtCheck->get_result();
-            if ($resultCheck->num_rows === 1) {
-                $row = $resultCheck->fetch_assoc();
-                logUserActivity($row['UserID'], 'PASSENGER', 'LOGIN', 'FAILED');
-            } else {
-                // If username doesn't exist, log with a special UserID
-                logUserActivity('NA', 'PASSENGER', 'LOGIN', 'FAILED');
-            }
-            $stmtCheck->close();
-        }
+        // Check if user exists but is deactivated
+        $checkStmt = $connMe->prepare("
+            SELECT p.UserID, u.Status 
+            FROM PASSENGER p
+            JOIN USER u ON p.UserID = u.UserID 
+            WHERE p.Username = ? AND p.Password = ?
+        ");
+        $checkStmt->bind_param("ss", $usernamePsgr, $passwordPsgr);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
         
-        // Return error response
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Wrong username or password.'
-        ]);
+        if ($checkResult->num_rows === 1) {
+            $checkRow = $checkResult->fetch_assoc();
+            if ($checkRow['Status'] === 'DEACTIVATED') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Your account has been deactivated. Please contact administrator.'
+                ]);
+                logUserActivity($checkRow['UserID'], 'PASSENGER', 'LOGIN', 'FAILED - ACCOUNT DEACTIVATED');
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Wrong username or password.'
+                ]);
+                logUserActivity($checkRow['UserID'], 'PASSENGER', 'LOGIN', 'FAILED');
+            }
+            $checkStmt->close();
+        } else {
+            // Log failed login attempt with unknown user
+            logUserActivity('NA', 'PASSENGER', 'LOGIN', 'FAILED');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Wrong username or password.'
+            ]);
+        }
     }
 
     $stmt->close(); // Close the original login statement

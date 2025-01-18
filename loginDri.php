@@ -18,7 +18,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $passwordDri = $_POST['driPwd'];
 
     // Prepare and execute the SQL query
-    $stmt = $connMe->prepare("SELECT DriverID, UserID FROM DRIVER WHERE Username = ? AND Password = ?");
+    $stmt = $connMe->prepare("
+        SELECT d.DriverID, d.UserID 
+        FROM DRIVER d
+        JOIN USER u ON d.UserID = u.UserID 
+        WHERE d.Username = ? AND d.Password = ? AND u.Status = 'ACTIVE'
+    ");
     if (!$stmt) {
         echo "Database error."; // Plain text response
         exit;
@@ -44,28 +49,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             //'redirect' => "http://192.168.214.55/workshop2/uprs/homePageDriv.php?UserID=" . $row['UserID'] . "&DriverID=" . $row['DriverID']
         ]);
     } else {
-        // Log failed login attempt
-        if (isset($_POST['driUsername'])) {
-            // Get UserID from username if possible
-            $stmtCheck = $connMe->prepare("SELECT UserID FROM DRIVER WHERE Username = ?");
-            $stmtCheck->bind_param("s", $_POST['driUsername']);
-            $stmtCheck->execute();
-            $resultCheck = $stmtCheck->get_result();
-            if ($resultCheck->num_rows === 1) {
-                $row = $resultCheck->fetch_assoc();
-                logUserActivity($row['UserID'], 'DRIVER', 'LOGIN', 'FAILED');
+        // Check if user exists but is deactivated
+        $checkStmt = $connMe->prepare("
+            SELECT d.UserID, u.Status 
+            FROM DRIVER d
+            JOIN USER u ON d.UserID = u.UserID 
+            WHERE d.Username = ? AND d.Password = ?
+        ");
+        $checkStmt->bind_param("ss", $usernameDri, $passwordDri);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
+        
+        if ($checkResult->num_rows === 1) {
+            $checkRow = $checkResult->fetch_assoc();
+            // Defined user but account is deactivated
+            if ($checkRow['Status'] === 'DEACTIVATED') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Your account has been deactivated. Please contact administrator.'
+                ]);
+                logUserActivity($checkRow['UserID'], 'DRIVER', 'LOGIN', 'FAILED - ACCOUNT DEACTIVATED');
             } else {
-                // If username doesn't exist, log with a special UserID
-                logUserActivity('NA', 'DRIVER', 'LOGIN', 'FAILED');
+                // Defined user but wrong password
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Wrong username or password.'
+                ]);
+                logUserActivity($checkRow['UserID'], 'DRIVER', 'LOGIN', 'FAILED');
             }
-            $stmtCheck->close();
+            $checkStmt->close();
+        } else {
+            // Undefined user login
+            // Log failed login attempt
+            logUserActivity('NA', 'DRIVER', 'LOGIN', 'FAILED');
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Wrong username or password.'
+            ]);
         }
-
-        // Login failed
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Wrong username or password.'
-        ]);
     }
 
     $stmt->close(); // Close statement

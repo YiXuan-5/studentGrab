@@ -511,7 +511,7 @@
             const gender = document.querySelector('input[name="gender"]:checked') ? 
                           document.querySelector('input[name="gender"]:checked').value : '';
             const availability = document.querySelector('input[name="availability"]:checked') ? 
-                                document.querySelector('input[name="availability"]:checked').value : '';
+                               document.querySelector('input[name="availability"]:checked').value : '';
 
             // If "All" is selected, call loadAllDrivers directly
             if (criteria === 'all') {
@@ -552,15 +552,15 @@
             .then(text => {
                 try {
                     const results = JSON.parse(text);
-                    const driverDetails = document.getElementById('driverDetails');
-                    const noResults = document.getElementById('noResults');
-                    driverDetails.innerHTML = '';
-                    noResults.style.display = 'none';
+                const driverDetails = document.getElementById('driverDetails');
+                const noResults = document.getElementById('noResults');
+                driverDetails.innerHTML = '';
+                noResults.style.display = 'none';
 
                     if (!results || results.error || !Array.isArray(results) || results.length === 0) {
-                        noResults.style.display = 'block';
+                    noResults.style.display = 'block';
                         updateTotalUsers(0);
-                    } else {
+                } else {
                         originalDriverData = results;
                         updateTotalUsers(results.length);
                         renderDrivers();
@@ -616,13 +616,13 @@
             .then(text => {
                 try {
                     const results = JSON.parse(text);
-                    const driverDetails = document.getElementById('driverDetails');
-                    const noResults = document.getElementById('noResults');
-                    driverDetails.innerHTML = '';
-                    noResults.style.display = 'none';
+                const driverDetails = document.getElementById('driverDetails');
+                const noResults = document.getElementById('noResults');
+                driverDetails.innerHTML = '';
+                noResults.style.display = 'none';
 
-                    if (!results || results.error || !Array.isArray(results) || results.length === 0) {
-                        noResults.style.display = 'block';
+                if (!results || results.error || !Array.isArray(results) || results.length === 0) {
+                    noResults.style.display = 'block';
                         updateTotalUsers(0);
                     } else {
                         originalDriverData = results;
@@ -759,49 +759,49 @@
             } else {
                 // Profile view rendering
                 originalDriverData.forEach(driver => {
-                    const formattedFullName = driver.FullName
-                        .toLowerCase()
-                        .split(' ')
-                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                        .join(' ');
+                        const formattedFullName = driver.FullName
+                            .toLowerCase()
+                            .split(' ')
+                            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                            .join(' ');
 
-                    driverDetails.innerHTML += `
-                        <div class="driver-info">
-                            <img src="${driver.ProfilePicture ? 'data:image/jpeg;base64,' + driver.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
-                            <div class="details">
-                                <div class="detail-row">
-                                    <span class="detail-label"><strong>Driver ID:</strong></span>
-                                    <span class="detail-value">${driver.DriverID}</span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label"><strong>User ID:</strong></span>
-                                    <span class="detail-value">${driver.UserID}</span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label"><strong>Full Name:</strong></span>
-                                    <span class="detail-value">${formattedFullName}</span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label"><strong>Username:</strong></span>
-                                    <span class="detail-value">${driver.Username}</span>
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-label"><strong>Sticker Expiry:</strong></span>
-                                    <span class="detail-value">${driver.StickerExpDate}</span>
-                                </div>
-                                <div class="button-group">
-                                    <button class="button" onclick="window.location.href='editDri.php?driverID=${driver.DriverID}'">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button class="button" onclick="deleteDriver('${driver.DriverID}', '${driver.UserID}')">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
+                        driverDetails.innerHTML += `
+                            <div class="driver-info">
+                                <img src="${driver.ProfilePicture ? 'data:image/jpeg;base64,' + driver.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
+                                <div class="details">
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Driver ID:</strong></span>
+                                        <span class="detail-value">${driver.DriverID}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>User ID:</strong></span>
+                                        <span class="detail-value">${driver.UserID}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Full Name:</strong></span>
+                                        <span class="detail-value">${formattedFullName}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Username:</strong></span>
+                                        <span class="detail-value">${driver.Username}</span>
+                                    </div>
+                                    <div class="detail-row">
+                                        <span class="detail-label"><strong>Sticker Expiry:</strong></span>
+                                        <span class="detail-value">${driver.StickerExpDate}</span>
+                                    </div>
+                                    <div class="button-group">
+                                        <button class="button" onclick="window.location.href='editDri.php?driverID=${driver.DriverID}'">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </button>
+                                        <button class="button" onclick="deleteDriver('${driver.DriverID}', '${driver.UserID}')">
+                                            <i class="fas fa-trash"></i> Delete
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                });
-            }
+                        `;
+                    });
+                }
         }
 
         // Add this function to update total users count
