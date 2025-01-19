@@ -12,11 +12,26 @@ if (!isset($_SESSION['DriverID']) || !isset($_SESSION['UserID'])) {
 $driverID = $_SESSION['DriverID'];
 $userID = $_SESSION['UserID'];
 
+//Notification icon
+$query = "SELECT COUNT(*) AS unread_count FROM riderequest WHERE driverID = ? AND notification_status = 'unread'";
+$stmt = $connAishah->prepare($query);
+
+if (!$stmt) {
+    die("Error preparing statement: " . $connAishah->error);
+}
+
+$stmt->bind_param("s", $_SESSION['DriverID']);
+$stmt->execute();
+$result = $stmt->get_result();
+$row = $result->fetch_assoc();
+$unreadCount = $row['unread_count'] ?? 0; // Default to 0 if no result is found
+$stmt->close();
+
 try {
     // Get user and driver information
     $stmt = $connMe->prepare("
         SELECT u.FullName, u.EmailAddress, u.PhoneNo, u.Gender, u.BirthDate, u.EmailSecCode, u.ProfilePicture,
-               u.SecQues1, u.SecQues2,  /* Add these two fields */
+               u.SecQues1, u.SecQues2, u.Status, u.MatricNo,  /* Add these fields */
                d.Username, d.Password, d.LicenseNo, d.LicenseExpDate, d.StickerExpDate, d.EHailingLicense, 
                d.Availability, d.CompletedRide
         FROM USER u
@@ -144,12 +159,19 @@ try {
             display: flex;
             align-items: center;
             gap: 5px;
+            transition: background-color 0.3s;
+            position: relative;
         }
 
         .nav-item:hover, .nav-item.active {
             background-color: #388e3c;
         }
-
+        .nav-items.right {
+            margin-left: auto;
+             margin-right: 20px;
+            display: flex;
+            align-items: center;
+        }
         /* Container styles */
         .container {
             max-width: 800px;
@@ -678,6 +700,20 @@ try {
             margin-left: 10px;
             font-weight: normal;
         }
+        .badge {
+            position: absolute;
+            top: 0px; /* Adjust position */
+            left: 15px; /* Adjust position */
+            background-color: red; /* Red background for the badge */
+            color: white; /* White text color */
+            font-size: 12px; /* Font size of the number */
+            font-weight: bold;
+            border-radius: 50%; /* Circular shape */
+            padding: 2px 7px; /* Padding inside the badge */
+            min-width: 20px; /* Minimum width to make it look nice */
+            text-align: center;
+            line-height: 1.2;
+        }
     </style>
 </head>
 <body>
@@ -695,7 +731,16 @@ try {
             UTeM Peer Ride - Driver Portal
         </div>
         <div class="nav-items right">
-            <a href="profileDri.php" class="nav-item active">
+            <a href="http://192.168.214.55/workshop2/uprs/drivNoti.php?UserID=<?php echo $_SESSION['UserID']; ?>&DriverID=<?php echo $_SESSION['DriverID'];?>" class="nav-item">
+                        <!--<i class="fas fa-user"></i>-->
+                        <img src="https://img.icons8.com/?size=100&id=11668&format=png&color=FFFFFF" 
+                        alt="Notification Icon" style="width: 20px; height: 20px; margin-right: 5px; vertical-align: middle;">
+                        Notification
+                        <?php if ($unreadCount > 0): ?>
+                            <span class="badge"><?php echo $unreadCount; ?></span>
+                        <?php endif; ?>
+           </a>
+            <a href="profileDri.php" class="nav-item">
                 <i class="fas fa-user"></i> Profile
             </a>
         </div>
@@ -734,6 +779,10 @@ try {
             <div class="profile-field">
                 <span class="field-label">Driver ID</span>
                 <span class="field-value"><?php echo htmlspecialchars($_SESSION['DriverID']); ?></span>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">Status</span>
+                <span class="field-value"><?php echo ucwords(strtolower($userData['Status'])); ?></span>
             </div>
             <div class="profile-field">
                 <span class="field-label">Username</span>
@@ -800,6 +849,10 @@ try {
             <div class="profile-field">
                 <span class="field-label">Birthday Date</span>
                 <span class="field-value"><?php echo date('Y/m/d', strtotime($userData['BirthDate'])); ?></span>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">Matric Number</span>
+                <span class="field-value"><?php echo $userData['MatricNo']; ?></span>
             </div>
         </div>
 
@@ -954,6 +1007,11 @@ try {
                 <div class="form-group">
                     <label>Driver ID:</label>
                     <input type="text" value="<?php echo $_SESSION['DriverID']; ?>" readonly class="readonly">
+                </div>
+
+                <div class="form-group">
+                    <label>Status:</label>
+                    <input type="text" value="<?php echo ucwords(strtolower($userData['Status'])); ?>" readonly class="readonly">
                 </div>
 
                 <div class="form-group">
@@ -1116,12 +1174,10 @@ try {
                 <div class="form-group">
                     <label>Gender:</label>
                     <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="gender" value="Male"> Male
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="gender" value="Female"> Female
-                        </label>
+                        <input type="radio" id="genderMale" name="gender" value="Male" <?php echo $userData['Gender'] === 'M' ? 'checked' : ''; ?> required>
+                        <label for="genderMale">Male</label>
+                        <input type="radio" id="genderFemale" name="gender" value="Female" <?php echo $userData['Gender'] === 'F' ? 'checked' : ''; ?> required>
+                        <label for="genderFemale">Female</label>
                     </div>
                 </div>
 
@@ -1132,6 +1188,12 @@ try {
                            min="<?php echo date('Y-m-d', strtotime('-60 years')); ?>"
                            max="<?php echo date('Y-m-d', strtotime('-19 years')); ?>"
                            required>
+                </div>
+
+                <div class="form-group">
+                    <label for="matricNo">Matric Number:</label>
+                    <input type="text" id="matricNo" name="matricNo" value="<?php echo $userData['MatricNo']; ?>" maxlength="10">
+                    <span id="matricNoError" class="error"></span>
                 </div>
 
                 <div class="button-group">
@@ -2115,6 +2177,56 @@ try {
                     alert('An error occurred while updating vehicle');
                 }
             });
+
+            // Add submit event listener to personal information form
+            document.getElementById('editPersonalForm').addEventListener('submit', async function(e) {
+                e.preventDefault(); // Prevent default form submission
+                await savePersonalChanges();
+            });
+
+            // Add blur event listener for matric number validation
+            document.getElementById('matricNo').addEventListener('blur', async function() {
+                const matricNo = this.value.trim().toUpperCase();
+                const matricNoError = document.getElementById('matricNoError');
+                
+                // Reset error message
+                matricNoError.textContent = '';
+                
+                // Check if empty
+                if (!matricNo) {
+                    matricNoError.textContent = 'Matric number cannot be empty';
+                    return;
+                }
+                
+                // Check format
+                if (!/^[BMD][01][0-9]{8}$/.test(matricNo)) {
+                    matricNoError.textContent = 'Invalid matric number format';
+                    return;
+                }
+                
+                // Only check for existing matric if the value has changed
+                if (matricNo !== '<?php echo $userData['MatricNo']; ?>') {
+                    try {
+                        const response = await fetch('validateMatricNo.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ 
+                                matricNoDisplay: matricNo,
+                                currentUserId: '<?php echo $_SESSION['UserID']; ?>'
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.status === 'exists') {
+                            matricNoError.textContent = 'Matric number already exists';
+                        }
+                    } catch (error) {
+                        console.error('Matric number validation error:', error);
+                        matricNoError.textContent = 'Error validating matric number';
+                    }
+                }
+            });
         });
 
         function togglePassword(inputId) {
@@ -2269,6 +2381,7 @@ try {
             document.getElementById('birthDate').value = '<?php echo date('Y-m-d', strtotime($userData['BirthDate'])); ?>';
             document.getElementById('licenseNo').value = '<?php echo $userData['LicenseNo']; ?>';
             document.getElementById('licenseExpDate').value = '<?php echo date('Y-m-d', strtotime($userData['LicenseExpDate'])); ?>';
+            document.getElementById('matricNo').value = '<?php echo $userData['MatricNo']; ?>';
             
             // Reset gender radio button
             const gender = '<?php echo $userData['Gender']; ?>';
@@ -2279,6 +2392,7 @@ try {
             document.getElementById('fullNameError').textContent = '';
             document.getElementById('phoneError').textContent = '';
             document.getElementById('licenseError').textContent = '';
+            document.getElementById('matricNoError').textContent = '';
             
             // Hide modal
             document.getElementById('editPersonalModal').style.display = 'none';
@@ -2360,6 +2474,137 @@ try {
 
                 // Show modal
                 document.getElementById('editVehicleModal').style.display = 'block';
+            }
+        }
+
+        async function savePersonalChanges() {
+            // Reset error messages
+            document.getElementById('fullNameError').textContent = '';
+            document.getElementById('phoneError').textContent = '';
+            document.getElementById('licenseError').textContent = '';
+            document.getElementById('matricNoError').textContent = '';
+
+            let hasErrors = false;
+
+            // Get form values
+            const fullName = document.getElementById('fullName').value.trim();
+            const phoneNo = document.getElementById('phoneNo').value.trim();
+            // Convert 'Male'/'Female' to 'M'/'F'
+            const genderValue = document.querySelector('input[name="gender"]:checked').value;
+            const gender = genderValue === 'Male' ? 'M' : 'F';
+
+            const birthDate = document.getElementById('birthDate').value;
+            const licenseNo = document.getElementById('licenseNo').value.trim();
+            const licenseExpDate = document.getElementById('licenseExpDate').value;
+            const matricNo = document.getElementById('matricNo').value.trim().toUpperCase();
+
+            // Validate full name
+            if (!fullName) {
+                document.getElementById('fullNameError').textContent = 'Full name cannot be empty';
+                hasErrors = true;
+            }
+
+            // Validate phone number format
+            if (!/^01\d-\d{7,8}$/.test(phoneNo)) {
+                document.getElementById('phoneError').textContent = 'Invalid format. Example: 012-3456789';
+                hasErrors = true;
+            } else if (phoneNo !== '<?php echo $userData['PhoneNo']; ?>') {
+                // Check if phone number exists
+                try {
+                    const response = await fetch('validatePhoneNo.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            phoneNo: phoneNo,
+                            userType: 'DRIVER',
+                            currentUserId: '<?php echo $_SESSION['UserID']; ?>'
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'exists') {
+                        document.getElementById('phoneError').textContent = 'Phone number already exists';
+                        hasErrors = true;
+                    }
+                } catch (error) {
+                    console.error('Phone validation error:', error);
+                    hasErrors = true;
+                }
+            }
+
+            // Validate license number
+            if (!licenseNo) {
+                document.getElementById('licenseError').textContent = 'License number cannot be empty';
+                hasErrors = true;
+            }
+
+            // Validate matric number
+            if (!matricNo) {
+                document.getElementById('matricNoError').textContent = 'Matric number cannot be empty';
+                hasErrors = true;
+            } else if (!/^[BMD][01][0-9]{8}$/.test(matricNo)) {
+                document.getElementById('matricNoError').textContent = 'Invalid matric number format';
+                hasErrors = true;
+            } else if (matricNo !== '<?php echo $userData['MatricNo']; ?>') {
+                // Check if matric number exists (only if changed)
+                try {
+                    const response = await fetch('validateMatricNo.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            matricNoDisplay: matricNo,
+                            currentUserId: '<?php echo $_SESSION['UserID']; ?>'
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'exists') {
+                        document.getElementById('matricNoError').textContent = 'Matric number already exists';
+                        hasErrors = true;
+                    }
+                } catch (error) {
+                    console.error('Matric number validation error:', error);
+                    hasErrors = true;
+                }
+            }
+
+            if (hasErrors) {
+                return; // Stop if there are any errors
+            }
+
+            // If no errors, proceed with update
+            const formData = {
+                updateType: 'personal',
+                fullName: fullName,
+                phoneNo: phoneNo,
+                gender: gender,
+                birthDate: birthDate,
+                licenseNo: licenseNo,
+                licenseExpDate: licenseExpDate,
+                matricNo: matricNo
+            };
+
+            try {
+                const response = await fetch('updateAccountDri.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert('Personal information updated successfully');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while updating personal information');
             }
         }
     </script>

@@ -110,16 +110,18 @@ try {
                     u.PhoneNo = ?,
                     u.Gender = ?,
                     u.BirthDate = ?,
+                    u.MatricNo = UPPER(?),
                     d.LicenseNo = ?,
                     d.LicenseExpDate = ?
                 WHERE u.UserID = ? AND d.DriverID = ?
             ");
             
-            $stmt->bind_param("ssssssss", 
+            $stmt->bind_param("sssssssss", 
                 $data['fullName'],
                 $data['phoneNo'],
                 $data['gender'],
                 $data['birthDate'],
+                $data['matricNo'],
                 $data['licenseNo'],
                 $data['licenseExpDate'],
                 $_SESSION['UserID'],

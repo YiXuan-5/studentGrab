@@ -17,7 +17,7 @@ try {
     // Get user and admin information
     $stmt = $connMe->prepare("
         SELECT u.FullName, u.EmailAddress, u.PhoneNo, u.Gender, u.BirthDate, u.EmailSecCode, u.ProfilePicture,
-               u.SecQues1, u.SecQues2,
+               u.SecQues1, u.SecQues2, u.Status,
                a.Username, a.Password, a.Department, a.Position
         FROM USER u
         JOIN ADMIN a ON u.UserID = a.UserID
@@ -634,6 +634,10 @@ try {
                 <span class="field-value"><?php echo htmlspecialchars($_SESSION['AdminID']); ?></span>
             </div>
             <div class="profile-field">
+                <span class="field-label">Status</span>
+                <span class="field-value"><?php echo ucwords(strtolower($userData['Status'])); ?></span>
+            </div>
+            <div class="profile-field">
                 <span class="field-label">Username</span>
                 <span class="field-value"><?php echo htmlspecialchars($userData['Username']); ?></span>
             </div>
@@ -735,6 +739,11 @@ try {
                 <div class="form-group">
                     <label>Admin ID:</label>
                     <input type="text" value="<?php echo $_SESSION['AdminID']; ?>" readonly class="readonly">
+                </div>
+
+                <div class="form-group">
+                    <label>Status:</label>
+                    <input type="text" value="<?php echo ucwords(strtolower($userData['Status'])); ?>" readonly class="readonly">
                 </div>
 
                 <div class="form-group">

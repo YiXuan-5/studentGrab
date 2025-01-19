@@ -11,12 +11,25 @@ if (!isset($_SESSION['PsgrID']) || !isset($_SESSION['UserID'])) {
 // Fetch user data
 $psgrID = $_SESSION['PsgrID'];
 $userID = $_SESSION['UserID'];
+/*
+//Notification icon
+// Prepared statement for security (to prevent SQL injection)
+$query = "SELECT COUNT(*) AS unread_count FROM riderequest WHERE psgrID = ? AND rstatus IN ('Accepted', 'Rejected') AND notification_rstatus = 'unread'";
+$stmt = $connAishah->prepare($query);
+$stmt->bind_param("s", $_SESSION['PsgrID']);  // Bind the psgrID to the query
+$stmt->execute();
+$result = $stmt->get_result();
+$row = $result->fetch_assoc();
+$unreadCount = $row['unread_count'];
 
+// Close the statement
+$stmt->close();
+*/
 try {
     // Get user and passenger information
     $stmt = $connMe->prepare("
         SELECT u.FullName, u.EmailAddress, u.PhoneNo, u.Gender, u.BirthDate, u.EmailSecCode, u.ProfilePicture,
-               u.SecQues1, u.SecQues2,
+               u.SecQues1, u.SecQues2, u.Status, u.MatricNo,
                p.Username, p.Password, p.FavPickUpLoc, p.FavDropOffLoc, p.Role
         FROM USER u
         JOIN PASSENGER p ON u.UserID = p.UserID
@@ -102,6 +115,9 @@ try {
 
         .nav-items.right {
             margin-left: auto;
+             margin-right: 20px;
+            display: flex;
+            align-items: center;
         }
 
         .nav-item {
@@ -113,6 +129,7 @@ try {
             align-items: center;
             gap: 5px;
             transition: background-color 0.3s;
+            position: relative;
         }
 
         .nav-item:hover {
@@ -571,6 +588,20 @@ try {
             margin-left: 10px;
             font-weight: normal;
         }
+        .badge {
+            position: absolute;
+            top: 0px; /* Adjust position */
+            left: 15px; /* Adjust position */
+            background-color: red; /* Red background for the badge */
+            color: white; /* White text color */
+            font-size: 12px; /* Font size of the number */
+            font-weight: bold;
+            border-radius: 50%; /* Circular shape */
+            padding: 2px 7px; /* Padding inside the badge */
+            min-width: 20px; /* Minimum width to make it look nice */
+            text-align: center;
+            line-height: 1.2;
+        }
     </style>
 </head>
 <body>
@@ -592,7 +623,10 @@ try {
 
         <!-- Right Side Items -->
         <div class="nav-items right">
-            <a href="profilePsgr.php" class="nav-item active">
+            
+            
+
+            <a href="profilePsgr.php" class="nav-item">
                 <i class="fas fa-user"></i>
                 Profile
             </a>
@@ -631,6 +665,10 @@ try {
             <div class="profile-field">
                 <span class="field-label">Passenger ID</span>
                 <span class="field-value"><?php echo htmlspecialchars($_SESSION['PsgrID']); ?></span>
+            </div>
+            <div class="profile-field">
+                <span class="field-label">Status</span>
+                <span class="field-value"><?php echo ucwords(strtolower($userData['Status'])); ?></span>
             </div>
             <div class="profile-field">
                 <span class="field-label">Username</span>
@@ -691,6 +729,10 @@ try {
                 <span class="field-value"><?php echo date('Y/m/d', strtotime($userData['BirthDate'])); ?></span>
             </div>
             <div class="profile-field">
+                <span class="field-label">Matric Number</span>
+                <span class="field-value"><?php echo $userData['MatricNo']; ?></span>
+            </div>
+            <div class="profile-field">
                 <span class="field-label">Role</span>
                 <span class="field-value"><?php echo ucwords(strtolower($userData['Role'])); ?></span>
             </div>
@@ -739,6 +781,11 @@ try {
                 </div>
 
                 <div class="form-group">
+                    <label>Status:</label>
+                    <input type="text" value="<?php echo ucwords(strtolower($userData['Status'])); ?>" readonly class="readonly">
+                </div>
+
+                <div class="form-group">
                     <label>Username:</label>
                     <input type="text" id="username" name="username" value="<?php echo htmlspecialchars($userData['Username']); ?>" maxlength="20">
                     <span id="usernameError" class="error"></span>
@@ -757,7 +804,7 @@ try {
                 <div class="form-group">
                     <label>New Password:</label>
                     <div class="password-field">
-                        <input type="password" id="password" name="password" placeholder="Enter new password (leave blank to keep current)">
+                        <input type="password" id="password" name="password" placeholder="Enter new password (leave blank to keep current)" maxLength = 16>
                         <button type="button" class="toggle-password" onclick="togglePassword('password')">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -902,6 +949,12 @@ try {
                 </div>
 
                 <div class="form-group">
+                    <label>Matric Number:</label>
+                    <input type="text" id="matricNo" name="matricNo" value="<?php echo $userData['MatricNo']; ?>" maxlength="10">
+                    <span id="matricNoError" class="error"></span>
+                </div>
+
+                <div class="form-group">
                     <label>Role:</label>
                     <div class="radio-group">
                         <label class="radio-label">
@@ -1002,6 +1055,7 @@ try {
             document.getElementById('fullName').value = '<?php echo ucwords(strtolower($userData['FullName'])); ?>';
             document.getElementById('phoneNo').value = '<?php echo htmlspecialchars($userData['PhoneNo']); ?>';
             document.getElementById('birthDate').value = '<?php echo date('Y-m-d', strtotime($userData['BirthDate'])); ?>';
+            document.getElementById('matricNo').value = '<?php echo $userData['MatricNo']; ?>';
             
             // Reset gender radio button
             const gender = '<?php echo $userData['Gender']; ?>';
@@ -1016,6 +1070,7 @@ try {
             // Clear any error messages
             document.getElementById('fullNameError').textContent = '';
             document.getElementById('phoneError').textContent = '';
+            document.getElementById('matricNoError').textContent = '';
             
             // Hide modal
             document.getElementById('editPersonalModal').style.display = 'none';
@@ -1282,8 +1337,16 @@ try {
             const fullName = document.getElementById('fullName').value.trim();
             // Validate phone number
             const phoneNo = document.getElementById('phoneNo').value.trim();
+            const matricNo = document.getElementById('matricNo').value.trim().toUpperCase();
+            
             if (!/^01\d-\d{7,8}$/.test(phoneNo)) {
                 document.getElementById('phoneError').textContent = 'Invalid phone number format. Example: 012-3456789';
+                return;
+            }
+
+            // Only validate matric number if it's not empty
+            if (matricNo && !/^[BMD][01][0-9]{8}$/.test(matricNo)) {
+                document.getElementById('matricNoError').textContent = 'Invalid matric number format';
                 return;
             }
 
@@ -1295,11 +1358,12 @@ try {
                     },
                     body: JSON.stringify({
                         updateType: 'personal',
-                        fullName: fullName.toUpperCase(), // Convert to uppercase before sending
+                        fullName: fullName.toUpperCase(),
                         phoneNo: phoneNo,
                         gender: document.querySelector('input[name="gender"]:checked').value,
                         birthDate: document.getElementById('birthDate').value,
-                        role: document.querySelector('input[name="role"]:checked').value.toUpperCase(), // Convert role to uppercase
+                        role: document.querySelector('input[name="role"]:checked').value.toUpperCase(),
+                        matricNo: matricNo || null,  // Send null if matricNo is empty
                         userId: '<?php echo $_SESSION['UserID']; ?>',
                         psgrId: '<?php echo $_SESSION['PsgrID']; ?>'
                     })
@@ -1520,6 +1584,79 @@ try {
             const cropperModal = document.getElementById('cropperModal');
             if (event.target === cropperModal) {
                 closeCropperModal();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add blur event listener for matric number validation
+            document.getElementById('matricNo').addEventListener('blur', async function() {
+                const matricNo = this.value.trim().toUpperCase();
+                const matricNoError = document.getElementById('matricNoError');
+                
+                // Reset error message
+                matricNoError.textContent = '';
+                
+                // Allow empty value
+                if (!matricNo) {
+                    validatePersonalForm();
+                    return;
+                }
+                
+                // Check format
+                if (!/^[BMD][01][0-9]{8}$/.test(matricNo)) {
+                    matricNoError.textContent = 'Invalid matric number format';
+                    validatePersonalForm();
+                    return;
+                }
+                
+                // Only check for existing matric if the value has changed
+                if (matricNo !== '<?php echo $userData['MatricNo']; ?>') {
+                    try {
+                        const response = await fetch('validateMatricNo.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ 
+                                matricNoDisplay: matricNo,
+                                currentUserId: '<?php echo $_SESSION['UserID']; ?>'
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.status === 'exists') {
+                            matricNoError.textContent = 'Matric number already exists';
+                            validatePersonalForm();
+                        }
+                    } catch (error) {
+                        console.error('Matric number validation error:', error);
+                        matricNoError.textContent = 'Error validating matric number';
+                        validatePersonalForm();
+                    }
+                }
+                validatePersonalForm(); // Call after successful validation
+            });
+        });
+
+        function validatePersonalForm() {
+            const saveButton = document.querySelector('#editPersonalForm button[type="submit"]');
+            const matricNoError = document.getElementById('matricNoError');
+            const phoneError = document.getElementById('phoneError');
+            
+            let isValid = true;
+            
+            // Check if there's a matric number error
+            if (matricNoError && matricNoError.textContent !== "") {
+                isValid = false;
+            }
+            
+            // Check if there's a phone number error
+            if (phoneError && phoneError.textContent !== "") {
+                isValid = false;
+            }
+            
+            // Disable or enable save button
+            if (saveButton) {
+                saveButton.disabled = !isValid;
             }
         }
     </script>

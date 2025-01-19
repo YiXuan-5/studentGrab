@@ -4,10 +4,11 @@ include 'dbConnection.php';
 header('Content-Type: application/json');
 
 $data = json_decode(file_get_contents('php://input'), true);
-$matricNo = $data['matricNo'];
+$matricNoDisplay = $data['matricNoDisplay'];
+$currentUserId = $data['currentUserId'] ?? null;
 
-$stmt = $connMe->prepare("SELECT UserID FROM USER WHERE MatricNo = ?");
-$stmt->bind_param("s", $matricNo);
+$stmt = $connMe->prepare("SELECT UserID FROM USER WHERE MatricNo = ? AND UserID != ?");
+$stmt->bind_param("ss", $matricNoDisplay, $currentUserId);
 $stmt->execute();
 $result = $stmt->get_result();
 

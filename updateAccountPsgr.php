@@ -18,12 +18,16 @@ try {
     if (isset($data['updateType'])) {
         if ($data['updateType'] === 'personal') {
             // Update USER table for personal information
-            $stmt = $connMe->prepare("UPDATE USER SET FullName = UPPER(?), PhoneNo = ?, Gender = ?, BirthDate = ? WHERE UserID = ?");
-            $stmt->bind_param("sssss", 
+            $stmt = $connMe->prepare("UPDATE USER SET FullName = UPPER(?), PhoneNo = ?, Gender = ?, BirthDate = ?, 
+                                    MatricNo = CASE WHEN ? IS NULL THEN NULL ELSE UPPER(?) END
+                                    WHERE UserID = ?");
+            $stmt->bind_param("sssssss", 
                 $data['fullName'],
                 $data['phoneNo'],
                 $data['gender'],
                 $data['birthDate'],
+                $data['matricNo'],
+                $data['matricNo'],
                 $_SESSION['UserID']
             );
             
