@@ -9,6 +9,7 @@ header('Content-Type: application/json');
 // Get the POST data
 $data = json_decode(file_get_contents("php://input"), true);
 $licenseNo = $data['licenseNo'] ?? '';
+$currentUserId = $data['currentUserId'] ?? null;
 
 if (empty($licenseNo)) {
     echo json_encode(["status" => "error", "message" => "License number is required"]);
@@ -22,8 +23,16 @@ if (!preg_match('/^\d{8}$/', $licenseNo)) {
 }
 
 // Query to check if the license number exists
-$stmt = $connMe->prepare("SELECT DriverID FROM DRIVER WHERE LicenseNo = ?");
-$stmt->bind_param("s", $licenseNo);
+if ($currentUserId === null) {
+    // For new registration
+    $stmt = $connMe->prepare("SELECT UserID FROM DRIVER WHERE LicenseNo = ?");
+    $stmt->bind_param("s", $licenseNo);
+} else {
+    // For editing existing driver
+    $stmt = $connMe->prepare("SELECT UserID FROM DRIVER WHERE LicenseNo = ? AND UserID != ?");
+    $stmt->bind_param("ss", $licenseNo, $currentUserId);
+}
+
 $stmt->execute();
 $result = $stmt->get_result();
 

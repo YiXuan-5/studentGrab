@@ -1192,7 +1192,7 @@ try {
 
                 <div class="form-group">
                     <label for="matricNo">Matric Number:</label>
-                    <input type="text" id="matricNo" name="matricNo" value="<?php echo $userData['MatricNo']; ?>" maxlength="10">
+                    <input type="text" id="matricNo" name="matricNo" value="<?php echo $userData['MatricNo']; ?>" maxlength="10" autocomplete="off">
                     <span id="matricNoError" class="error"></span>
                 </div>
 
@@ -2056,7 +2056,7 @@ try {
                         },
                         body: JSON.stringify({ 
                             licenseNo: licenseNo,
-                            userType: 'DRIVER'
+                            currentUserId: '<?php echo $_SESSION['UserID']; ?>'
                         })
                     });
                     const data = await response.json();

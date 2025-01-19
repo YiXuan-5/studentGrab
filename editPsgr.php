@@ -16,7 +16,7 @@ if ($passengerID) {
     $stmt = $connMe->prepare("
         SELECT u.FullName, u.EmailAddress, u.PhoneNo, u.Gender, u.BirthDate, u.EmailSecCode, u.ProfilePicture, u.UserType,
                u.SecQues1, u.SecQues2,
-               p.Username, p.Password, p.FavPickUpLoc, p.FavDropOffLoc, p.Role, p.UserID
+               p.Username, p.Password, p.FavPickUpLoc, p.FavDropOffLoc, p.Role, p.UserID, u.Status, u.MatricNo
         FROM USER u
         JOIN PASSENGER p ON u.UserID = p.UserID
         WHERE p.PsgrID = ?
@@ -500,6 +500,17 @@ if ($passengerID) {
                         </div>
                     </div>
                 </div>
+                <div class="profile-field">
+                    <span class="field-label">Status</span>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="status" value="Active" <?php echo $passengerData['Status'] === 'ACTIVE' ? 'checked' : ''; ?>> Active
+                        </label>
+                        <label>
+                            <input type="radio" name="status" value="Deactivated" <?php echo $passengerData['Status'] === 'DEACTIVATED' ? 'checked' : ''; ?>> Deactivated
+                        </label>
+                    </div>
+                </div>
                 <div class="section-button">
                     <button type="submit" class="button save-btn">Save Changes</button>
                 </div>
@@ -579,6 +590,13 @@ if ($passengerID) {
                     <span class="field-label">User Type</span>
                     <div class="input-wrapper">
                         <input type="text" class="field-value" value="<?php echo ucwords(strtolower($passengerData['UserType'])); ?>" readonly>
+                    </div>
+                </div>
+                <div class="profile-field">
+                    <span class="field-label">Matric Number</span>
+                    <div class="input-wrapper">
+                        <input type="text" id="matricNo" class="field-value" value="<?php echo htmlspecialchars($passengerData['MatricNo'] ?? ''); ?>" autocomplete="off" maxLength=10>
+                        <span id="matricNoError" class="error"></span>
                     </div>
                 </div>
                 <div class="section-button">
@@ -825,7 +843,8 @@ if ($passengerID) {
                 birthDate: document.getElementById('birthDate').value,
                 role: document.querySelector('input[name="role"]:checked').value.toUpperCase(),
                 favPickUpLoc: document.getElementById('favPickUpLoc').value.trim().toUpperCase(),
-                favDropOffLoc: document.getElementById('favDropOffLoc').value.trim().toUpperCase()
+                favDropOffLoc: document.getElementById('favDropOffLoc').value.trim().toUpperCase(),
+                status: document.querySelector('input[name="status"]:checked').value.toUpperCase()
             };
 
             try {
@@ -969,7 +988,8 @@ if ($passengerID) {
                     email: email,
                     securityCode: securityCode,
                     secQues1: document.getElementById('secQues1').value.trim(),
-                    secQues2: document.getElementById('secQues2').value.trim()
+                    secQues2: document.getElementById('secQues2').value.trim(),
+                    status: document.querySelector('input[name="status"]:checked').value.toUpperCase()
                 };
 
                 const response = await fetch('editAccountPsgr.php', {
@@ -1003,6 +1023,11 @@ if ($passengerID) {
             // Reset error messages
             document.getElementById('fullNameError').textContent = '';
             document.getElementById('phoneError').textContent = '';
+            const matricNoError = document.getElementById('matricNoError');
+            
+            if (matricNoError.textContent !== '') {
+                return; // Don't proceed if there's a matric number error
+            }
 
             let hasErrors = false;
 
@@ -1057,7 +1082,8 @@ if ($passengerID) {
                 phoneNo: document.getElementById('phoneNo').value.trim(),
                 gender: document.querySelector('input[name="gender"]:checked').value,
                 birthDate: document.getElementById('birthDate').value,
-                role: document.querySelector('input[name="role"]:checked').value.toUpperCase()
+                role: document.querySelector('input[name="role"]:checked').value.toUpperCase(),
+                matricNo: document.getElementById('matricNo').value.trim() || null
             };
 
             try {
@@ -1135,6 +1161,51 @@ if ($passengerID) {
         document.getElementById('editPreferencesForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             await savePreferencesChanges();
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add blur event listener for matric number validation
+            document.getElementById('matricNo').addEventListener('blur', async function() {
+                const matricNo = this.value.trim().toUpperCase();
+                const matricNoError = document.getElementById('matricNoError');
+                
+                // Reset error message
+                matricNoError.textContent = '';
+                
+                // Allow empty value
+                if (!matricNo) {
+                    return;
+                }
+                
+                // Check format
+                if (!/^[BMD][01][0-9]{8}$/.test(matricNo)) {
+                    matricNoError.textContent = 'Invalid matric number format';
+                    return;
+                }
+                
+                // Only check for existing matric if the value has changed
+                if (matricNo !== '<?php echo $passengerData['MatricNo']; ?>') {
+                    try {
+                        const response = await fetch('validateMatricNo.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ 
+                                matricNoDisplay: matricNo,
+                                currentUserId: '<?php echo $passengerData['UserID']; ?>'
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.status === 'exists') {
+                            matricNoError.textContent = 'Matric number already exists';
+                        }
+                    } catch (error) {
+                        console.error('Matric number validation error:', error);
+                        matricNoError.textContent = 'Error validating matric number';
+                    }
+                }
+            });
         });
     </script>
 </body>

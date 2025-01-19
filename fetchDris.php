@@ -181,6 +181,33 @@ try {
         ";
         $stmt = $connMe->prepare($query);
         $stmt->bind_param("ss", $data['startDate'], $data['endDate']);
+    } else if ($criteria === 'matricNo' && !empty($data['matricNo'])) {
+        $query = "
+            SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
+                   u.FullName, u.ProfilePicture
+            FROM DRIVER d
+            INNER JOIN USER u ON d.UserID = u.UserID
+            WHERE u.MatricNo LIKE UPPER(CONCAT('%', ?, '%'))
+            ORDER BY u.MatricNo ASC
+        ";
+        
+        $stmt = $connMe->prepare($query);
+        $stmt->bind_param("s", $data['matricNo']);
+        error_log("Searching for Matric No: " . $data['matricNo']);
+        
+    } else if ($criteria === 'status' && !empty($data['status'])) {
+        $query = "
+            SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
+                   u.FullName, u.ProfilePicture
+            FROM DRIVER d
+            INNER JOIN USER u ON d.UserID = u.UserID
+            WHERE u.Status = ?
+            ORDER BY d.DriverID ASC
+        ";
+        
+        $stmt = $connMe->prepare($query);
+        $stmt->bind_param("s", $data['status']);
+        error_log("Searching for Status: " . $data['status']);
     }
 
     if (isset($stmt) && $criteria !== 'all') {

@@ -950,7 +950,7 @@ try {
 
                 <div class="form-group">
                     <label>Matric Number:</label>
-                    <input type="text" id="matricNo" name="matricNo" value="<?php echo $userData['MatricNo']; ?>" maxlength="10">
+                    <input type="text" id="matricNo" name="matricNo" value="<?php echo $userData['MatricNo']; ?>" maxlength="10" autocomplete = "off">
                     <span id="matricNoError" class="error"></span>
                 </div>
 

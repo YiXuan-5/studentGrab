@@ -367,6 +367,8 @@
                         <option value="username">Username</option>
                         <option value="gender">Gender</option>
                         <option value="fullName">Full Name</option>
+                        <option value="matricNo">Matric Number</option>
+                        <option value="status">Status</option>
                         <option value="pickupLocation">Favourite Pick Up Location</option>
                         <option value="dropoffLocation">Favourite Drop Off Location</option>
                     </select>
@@ -417,6 +419,23 @@
                         <div id="fullNameField" style="display: none;">
                             <label for="fullName">Full Name:</label>
                             <input type="text" id="fullName" autocomplete="off">
+                        </div>
+
+                        <div id="matricNoField" style="display: none;">
+                            <label for="matricNo">Matric Number:</label>
+                            <input type="text" id="matricNo" autocomplete="off">
+                        </div>
+
+                        <div id="statusField" style="display: none;">
+                            <label>Status:</label>
+                            <div class="radio-group">
+                                <label>
+                                    <input type="radio" name="status" value="Active"> Active
+                                </label>
+                                <label>
+                                    <input type="radio" name="status" value="Deactivated"> Deactivated
+                                </label>
+                            </div>
                         </div>
 
                         <div id="pickupLocationField" style="display: none;">
@@ -594,7 +613,7 @@
             function showInputFields() {
                 const criteria = document.getElementById('criteria').value;
                 const inputFields = document.getElementById('inputFields');
-                inputFields.style.display = 'block'; // Show input fields container
+                inputFields.style.display = 'block';
 
                 // Hide all input fields initially
                 document.getElementById('psgrIDField').style.display = 'none';
@@ -602,6 +621,8 @@
                 document.getElementById('usernameField').style.display = 'none';
                 document.getElementById('genderField').style.display = 'none';
                 document.getElementById('fullNameField').style.display = 'none';
+                document.getElementById('matricNoField').style.display = 'none';
+                document.getElementById('statusField').style.display = 'none';
                 document.getElementById('pickupLocationField').style.display = 'none';
                 document.getElementById('dropoffLocationField').style.display = 'none';
 
@@ -616,6 +637,10 @@
                     document.getElementById('genderField').style.display = 'block';
                 } else if (criteria === 'fullName') {
                     document.getElementById('fullNameField').style.display = 'block';
+                } else if (criteria === 'matricNo') {
+                    document.getElementById('matricNoField').style.display = 'block';
+                } else if (criteria === 'status') {
+                    document.getElementById('statusField').style.display = 'block';
                 } else if (criteria === 'pickupLocation') {
                     document.getElementById('pickupLocationField').style.display = 'block';
                 } else if (criteria === 'dropoffLocation') {
@@ -632,10 +657,12 @@
                 const psgrID = document.getElementById('psgrID').value;
                 const username = document.getElementById('username').value;
                 const fullName = document.getElementById('fullName').value;
+                const matricNo = document.getElementById('matricNo').value;
                 const favPickUpLoc = document.getElementById('pickupLocation').value;
                 const favDropOffLoc = document.getElementById('dropoffLocation').value;
                 const role = document.querySelector('input[name="role"]:checked') ? document.querySelector('input[name="role"]:checked').value : '';
                 const gender = document.querySelector('input[name="gender"]:checked') ? document.querySelector('input[name="gender"]:checked').value : '';
+                const status = document.querySelector('input[name="status"]:checked') ? document.querySelector('input[name="status"]:checked').value.toUpperCase() : '';
                 
                 // Log all data being sent
                 console.log('Sending search data:', {
@@ -643,10 +670,12 @@
                     psgrID: psgrID,
                     username: username,
                     fullName: fullName,
+                    matricNo: matricNo,
                     favPickUpLoc: favPickUpLoc,
                     favDropOffLoc: favDropOffLoc,
                     role: role,
-                    gender: gender
+                    gender: gender,
+                    status: status
                 });
 
                 const data = {
@@ -654,10 +683,12 @@
                     psgrID: psgrID,
                     username: username,
                     fullName: fullName,
+                    matricNo: matricNo,
                     favPickUpLoc: favPickUpLoc,
                     favDropOffLoc: favDropOffLoc,
                     role: role,
-                    gender: gender
+                    gender: gender,
+                    status: status
                 };
 
                 // If "All" is selected, call loadAllPassengers directly

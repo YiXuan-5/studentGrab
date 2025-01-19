@@ -242,7 +242,77 @@ try {
             echo json_encode(['message' => 'No results found']);
             exit;
         }
-    }else if ($criteria === 'pickupLocation' && !empty($favPickUpLoc)) {
+    } else if ($criteria === 'status' && !empty($data['status'])) {
+        $query = "
+            SELECT p.PsgrID, p.UserID, p.Username, 
+                   u.FullName, u.ProfilePicture
+            FROM PASSENGER p
+            INNER JOIN USER u ON p.UserID = u.UserID
+            WHERE u.Status = ?
+            ORDER BY p.PsgrID ASC
+        ";
+        
+        $stmt = $connMe->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connMe->error);
+        }
+        
+        $stmt->bind_param("s", $data['status']);
+        error_log("Searching for Status: " . $data['status']);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+        
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            if (isset($row['ProfilePicture'])) {
+                $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
+            }
+            $results[] = $row;
+        }
+        
+        if (empty($results)) {
+            echo json_encode(['message' => 'No results found']);
+            exit;
+        }
+    } else if ($criteria === 'matricNo' && !empty($data['matricNo'])) {
+        $query = "
+            SELECT p.PsgrID, p.UserID, p.Username,
+                   u.FullName, u.ProfilePicture
+            FROM PASSENGER p
+            INNER JOIN USER u ON p.UserID = u.UserID
+            WHERE u.MatricNo LIKE UPPER(CONCAT('%', ?, '%'))
+            ORDER BY u.MatricNo ASC
+        ";
+        
+        $stmt = $connMe->prepare($query);
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $connMe->error);
+        }
+        
+        $stmt->bind_param("s", $data['matricNo']);
+        error_log("Searching for Matric No: " . $data['matricNo']);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+        
+        $result = $stmt->get_result();
+        
+        while ($row = $result->fetch_assoc()) {
+            if (isset($row['ProfilePicture'])) {
+                $row['ProfilePicture'] = base64_encode($row['ProfilePicture']);
+            }
+            $results[] = $row;
+        }
+        
+        if (empty($results)) {
+            echo json_encode(['message' => 'No results found']);
+            exit;
+        }
+    } else if ($criteria === 'pickupLocation' && !empty($favPickUpLoc)) {
         $query = "
             SELECT p.PsgrID, p.UserID, p.Username, 
                     u.FullName, u.ProfilePicture

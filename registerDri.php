@@ -746,11 +746,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             emailSecCodeError.textContent = "";
             document.getElementById('plateError').textContent = "";
             // Don't reset matricNoDisplayError here since it's handled by the blur event
-
+            
             let isValid = true;
-
+            
             // Check if there's an existing matric number error
             if (matricNoDisplayError.textContent !== "") {
+                isValid = false;
+            }
+
+            // Check if there's a license number error
+            const licenseError = document.getElementById('licenseError');
+            if (licenseError && licenseError.textContent !== "") {
                 isValid = false;
             }
 
@@ -794,34 +800,50 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             document.getElementById('phoneChecked').value = phoneValue;
         }
 
-        // License number validation
+        // License number validation on blur
         document.getElementById('licenseNo').addEventListener('input', async (e) => {
-            const licenseNo = e.target.value.trim();
+            const licenseNo = document.getElementById('licenseNo').value.trim();
             const licenseError = document.getElementById('licenseError');
+            
+            // Reset error message
+            licenseError.textContent = '';
 
-            // \d is used to match any digit
-            if (!/^\d{8}$/.test(licenseNo)) {
-                licenseError.textContent = "License number must be exactly 8 numeric digits";
+            if (!licenseNo) {
+                licenseError.textContent = 'License number is required';
+                validateForm();
                 return;
             }
 
+            if (!/^\d{8}$/.test(licenseNo)) {
+                licenseError.textContent = 'License number must be exactly 8 digits';
+                validateForm();
+                return;
+            }
+           
+            // Check uniqueness only if format is valid
             try {
                 const response = await fetch('validateLicenseNo.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ licenseNo: licenseNo })
+                    body: JSON.stringify({ 
+                        licenseNo: licenseNo,
+                        currentUserId: null // null for new registration
+                    })
                 });
                 const data = await response.json();
-                
                 if (data.status === 'exists') {
-                    licenseError.textContent = "License number already registered";
+                    licenseError.textContent = 'License number already exists';
+                    validateForm();
                 } else {
-                    licenseError.textContent = "";
+                    licenseError.textContent = '';
+                    validateForm();
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('License validation error:', error);
+                licenseError.textContent = 'Error validating license number';
+                validateForm();
             }
         });
 

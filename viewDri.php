@@ -377,6 +377,8 @@
                     <option value="username">Username</option>
                     <option value="gender">Gender</option>
                     <option value="fullName">Full Name</option>
+                    <option value="matricNo">Matric Number</option>
+                    <option value="status">Status</option>
                     <option value="stickerExpiry">Sticker Expiry Date</option>
                     <option value="availability">Availability</option>
                 </select>
@@ -411,6 +413,23 @@
                     <div id="fullNameField" style="display: none;">
                         <label for="fullName">Full Name:</label>
                         <input type="text" id="fullName" autocomplete="off">
+                    </div>
+
+                    <div id="matricNoField" style="display: none;">
+                        <label for="matricNo">Matric Number:</label>
+                        <input type="text" id="matricNo" autocomplete="off">
+                    </div>
+
+                    <div id="statusField" style="display: none;">
+                        <label>Status:</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="status" value="Active"> Active
+                            </label>
+                            <label>
+                                <input type="radio" name="status" value="Deactivated"> Deactivated
+                            </label>
+                        </div>
                     </div>
 
                     <div id="availabilityField" style="display: none;">
@@ -484,6 +503,8 @@
             document.getElementById('usernameField').style.display = 'none';
             document.getElementById('genderField').style.display = 'none';
             document.getElementById('fullNameField').style.display = 'none';
+            document.getElementById('matricNoField').style.display = 'none';
+            document.getElementById('statusField').style.display = 'none';
             document.getElementById('availabilityField').style.display = 'none';
             document.getElementById('stickerExpiryField').style.display = 'none';
 
@@ -496,6 +517,10 @@
                 document.getElementById('genderField').style.display = 'block';
             } else if (criteria === 'fullName') {
                 document.getElementById('fullNameField').style.display = 'block';
+            } else if (criteria === 'matricNo') {
+                document.getElementById('matricNoField').style.display = 'block';
+            } else if (criteria === 'status') {
+                document.getElementById('statusField').style.display = 'block';
             } else if (criteria === 'availability') {
                 document.getElementById('availabilityField').style.display = 'block';
             } else if (criteria === 'stickerExpiry') {
@@ -508,8 +533,11 @@
             const driverID = document.getElementById('driverID').value;
             const username = document.getElementById('username').value;
             const fullName = document.getElementById('fullName').value;
+            const matricNo = document.getElementById('matricNo').value;
             const gender = document.querySelector('input[name="gender"]:checked') ? 
                           document.querySelector('input[name="gender"]:checked').value : '';
+            const status = document.querySelector('input[name="status"]:checked') ? 
+                          document.querySelector('input[name="status"]:checked').value.toUpperCase() : '';
             const availability = document.querySelector('input[name="availability"]:checked') ? 
                                document.querySelector('input[name="availability"]:checked').value : '';
 
@@ -524,7 +552,9 @@
                 driverID: driverID,
                 username: username,
                 fullName: fullName,
+                matricNo: matricNo,
                 gender: gender,
+                status: status,
                 availability: availability
             };
 

@@ -55,6 +55,12 @@ try {
                 $types .= "s";
             }
 
+            if (!empty($data['status'])) {
+                $updateUserSQL .= "Status = ?, ";
+                $params[] = $data['status'];
+                $types .= "s";
+            }
+
             // Remove trailing comma and add WHERE clause
             $updateUserSQL = rtrim($updateUserSQL, ", ") . " WHERE UserID = ?";
             $params[] = $userID;
@@ -99,14 +105,17 @@ try {
             // Update USER table
             $stmt = $connMe->prepare("
                 UPDATE USER 
-                SET FullName = ?, PhoneNo = ?, Gender = ?, BirthDate = ?
+                SET FullName = ?, PhoneNo = ?, Gender = ?, BirthDate = ?, 
+                   MatricNo = CASE WHEN ? IS NULL THEN NULL ELSE UPPER(?) END
                 WHERE UserID = ?
             ");
-            $stmt->bind_param("sssss", 
+            $stmt->bind_param("sssssss", 
                 $data['fullName'],
                 $data['phoneNo'],
                 $data['gender'],
                 $data['birthDate'],
+                $data['matricNo'],
+                $data['matricNo'],
                 $userID
             );
             $stmt->execute();

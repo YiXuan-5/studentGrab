@@ -16,7 +16,7 @@ if ($driverID) {
     $stmt = $connMe->prepare("
         SELECT u.FullName, u.EmailAddress, u.PhoneNo, u.Gender, u.BirthDate, 
                u.EmailSecCode, u.ProfilePicture, u.UserType,
-               u.SecQues1, u.SecQues2,
+               u.SecQues1, u.SecQues2, u.Status, u.MatricNo,
                d.Username, d.Password, d.LicenseNo, d.LicenseExpDate, d.EHailingLicense,
                d.StickerExpDate, d.Availability, d.CompletedRide, d.UserID
         FROM USER u
@@ -442,6 +442,18 @@ if ($driverID) {
                 </div>
             </div>
 
+            <div class="profile-field">
+                <span class="field-label">Status</span>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="status" value="Active" <?php echo $driverData['Status'] === 'ACTIVE' ? 'checked' : ''; ?>> Active
+                    </label>
+                    <label>
+                        <input type="radio" name="status" value="Deactivated" <?php echo $driverData['Status'] === 'DEACTIVATED' ? 'checked' : ''; ?>> Deactivated
+                    </label>
+                </div>
+            </div>
+
             <div class="section-button">
                 <button type="submit" class="button save-btn">Save Changes</button>
             </div>
@@ -525,6 +537,16 @@ if ($driverID) {
                 <span class="field-label">User Type</span>
                 <div class="input-wrapper">
                     <input type="text" class="field-value" value="<?php echo ucwords(strtolower($driverData['UserType'])); ?>" readonly>
+                </div>
+            </div>
+
+            <div class="profile-field">
+                <span class="field-label">Matric Number</span>
+                <div class="input-wrapper">
+                    <input type="text" id="matricNo" class="field-value" 
+                           value="<?php echo htmlspecialchars($driverData['MatricNo'] ?? ''); ?>" 
+                           autocomplete="off" maxLength=10 required>
+                    <span id="matricNoError" class="error"></span>
                 </div>
             </div>
 
@@ -731,7 +753,8 @@ if ($driverID) {
                 email: email,
                 securityCode: securityCode,
                 secQues1: document.getElementById('secQues1').value.trim(),
-                secQues2: document.getElementById('secQues2').value.trim()
+                secQues2: document.getElementById('secQues2').value.trim(),
+                status: document.querySelector('input[name="status"]:checked').value.toUpperCase()
             };
 
             try {
@@ -762,6 +785,11 @@ if ($driverID) {
             document.getElementById('phoneError').textContent = '';
             document.getElementById('licenseError').textContent = '';
             document.getElementById('licenseExpDateError').textContent = '';
+            const matricNoError = document.getElementById('matricNoError');
+            
+            if (matricNoError.textContent !== '') {
+                return; // Don't proceed if there's a matric number error
+            }
 
             let hasErrors = false;
 
@@ -803,9 +831,51 @@ if ($driverID) {
             // Validate license number
             const licenseNo = document.getElementById('licenseNo').value.trim();
             if (licenseNo !== originalData.licenseNo) {
+                // Reset error message
+                document.getElementById('licenseError').textContent = '';
+                
+                // Check if empty
+                if (!licenseNo) {
+                    document.getElementById('licenseError').textContent = 'License number is required';
+                    hasErrors = true;
+                    validatePersonalForm();
+                    return;
+                }
+                
+                // Check format first
                 if (!/^\d{8}$/.test(licenseNo)) {
                     document.getElementById('licenseError').textContent = 'License number must be exactly 8 digits';
                     hasErrors = true;
+                    validatePersonalForm();
+                    return;
+                }
+                
+                // Only check for existing license if format is valid
+                try {
+                    const response = await fetch('validateLicenseNo.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            licenseNo: licenseNo,
+                            currentUserId: '<?php echo $driverData['UserID']; ?>'
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'exists') {
+                        document.getElementById('licenseError').textContent = 'License number already exists';
+                        hasErrors = true;
+                        validatePersonalForm();
+                    } else {
+                        document.getElementById('licenseError').textContent = '';
+                        validatePersonalForm();
+                    }
+                } catch (error) {
+                    console.error('License validation error:', error);
+                    document.getElementById('licenseError').textContent = 'Error validating license number';
+                    hasErrors = true;
+                    validatePersonalForm();
                 }
             }
 
@@ -813,18 +883,19 @@ if ($driverID) {
                 return;
             }
 
-            // If no errors, proceed with save
+            // Continue with the save if no errors
             const formData = {
                 updateType: 'personal',
                 driverId: '<?php echo $driverID; ?>',
                 userId: '<?php echo $driverData['UserID']; ?>',
-                fullName: fullName.toUpperCase(),
-                phoneNo: phoneNo,
+                fullName: document.getElementById('fullName').value.trim().toUpperCase(),
+                phoneNo: document.getElementById('phoneNo').value.trim(),
                 gender: document.querySelector('input[name="gender"]:checked').value,
                 birthDate: document.getElementById('birthDate').value,
-                licenseNo: licenseNo,
+                licenseNo: document.getElementById('licenseNo').value.trim(),
                 licenseExpDate: document.getElementById('licenseExpDate').value,
-                stickerExpDate: document.getElementById('stickerExpDate').value
+                stickerExpDate: document.getElementById('stickerExpDate').value,
+                matricNo: document.getElementById('matricNo').value.trim()
             };
 
             try {
@@ -1046,8 +1117,88 @@ if ($driverID) {
             }
         });
 
+        function validatePersonalForm() {
+            const saveButton = document.querySelector('#editPersonalForm button[type="submit"]');
+            const matricNoError = document.getElementById('matricNoError');
+            const phoneError = document.getElementById('phoneError');
+            const licenseError = document.getElementById('licenseError');
+            
+            let isValid = true;
+            
+            // Check if there's a matric number error
+            if (matricNoError && matricNoError.textContent !== "") {
+                isValid = false;
+            }
+            
+            // Check if there's a phone number error
+            if (phoneError && phoneError.textContent !== "") {
+                isValid = false;
+            }
+            
+            // Check if there's a license number error
+            if (licenseError && licenseError.textContent !== "") {
+                isValid = false;
+            }
+            
+            // Disable or enable save button
+            if (saveButton) {
+                saveButton.disabled = !isValid;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add blur event listener for matric number validation
+            document.getElementById('matricNo').addEventListener('blur', async function() {
+                const matricNo = this.value.trim().toUpperCase();
+                const matricNoError = document.getElementById('matricNoError');
+                
+                // Reset error message
+                matricNoError.textContent = '';
+                
+                // Check if empty
+                if (!matricNo) {
+                    matricNoError.textContent = 'Matric number is required';
+                    validatePersonalForm();
+                    return;
+                }
+                
+                // Check format
+                if (!/^[BMD][01][0-9]{8}$/.test(matricNo)) {
+                    matricNoError.textContent = 'Invalid matric number format';
+                    validatePersonalForm();
+                    return;
+                }
+                
+                // Only check for existing matric if the value has changed
+                if (matricNo !== '<?php echo $driverData['MatricNo']; ?>') {
+                    try {
+                        const response = await fetch('validateMatricNo.php', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ 
+                                matricNoDisplay: matricNo,
+                                currentUserId: '<?php echo $driverData['UserID']; ?>'
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.status === 'exists') {
+                            matricNoError.textContent = 'Matric number already exists';
+                            validatePersonalForm();
+                        }
+                    } catch (error) {
+                        console.error('Matric number validation error:', error);
+                        matricNoError.textContent = 'Error validating matric number';
+                        validatePersonalForm();
+                    }
+                }
+                validatePersonalForm(); // Call after successful validation
+            });
+        });
+
         // License number validation on blur
-        document.getElementById('licenseNo').addEventListener('blur', () => {
+        document.getElementById('licenseNo').addEventListener('blur', async () => {
             const licenseNo = document.getElementById('licenseNo').value.trim();
             const licenseError = document.getElementById('licenseError');
             
@@ -1058,8 +1209,33 @@ if ($driverID) {
 
             if (!/^\d{8}$/.test(licenseNo)) {
                 licenseError.textContent = 'License number must be exactly 8 digits';
+                validatePersonalForm();
             } else {
-                licenseError.textContent = '';
+                // Check uniqueness only if format is valid
+                try {
+                    const response = await fetch('validateLicenseNo.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            licenseNo: licenseNo,
+                            currentUserId: '<?php echo $driverData['UserID']; ?>'
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.status === 'exists') {
+                        licenseError.textContent = 'License number already exists';
+                        validatePersonalForm();
+                    } else {
+                        licenseError.textContent = '';
+                        validatePersonalForm();
+                    }
+                } catch (error) {
+                    console.error('License validation error:', error);
+                    licenseError.textContent = 'Error validating license number';
+                    validatePersonalForm();
+                }
             }
         });
     </script>

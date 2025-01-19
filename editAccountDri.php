@@ -57,6 +57,12 @@ try {
                     $types .= "s";
                 }
 
+                if (!empty($data['status'])) {
+                    $updates[] = "Status = ?";
+                    $params[] = $data['status'];
+                    $types .= "s";
+                }
+
                 if (!empty($updates)) {
                     $query = "UPDATE USER SET " . implode(", ", $updates) . " WHERE UserID = ?";
                     $params[] = $data['userId'];
@@ -110,23 +116,30 @@ try {
                     u.PhoneNo = ?,
                     u.Gender = ?,
                     u.BirthDate = ?,
+                    u.MatricNo = UPPER(?),
                     d.LicenseNo = ?,
                     d.LicenseExpDate = ?,
                     d.StickerExpDate = ?
                 WHERE u.UserID = ? AND d.DriverID = ?
             ");
             
-            $stmt->bind_param("sssssssss", 
+            $stmt->bind_param("ssssssssss", 
                 $data['fullName'],
                 $data['phoneNo'],
                 $data['gender'],
                 $data['birthDate'],
+                $data['matricNo'],
                 $data['licenseNo'],
                 $data['licenseExpDate'],
                 $data['stickerExpDate'],
                 $data['userId'],
                 $data['driverId']
             );
+            
+            // Check if matric number is empty
+            if (empty($data['matricNo'])) {
+                throw new Exception("Matric number is required for drivers");
+            }
             
             if (!$stmt->execute()) {
                 throw new Exception("Failed to update user information");
