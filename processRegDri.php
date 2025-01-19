@@ -97,17 +97,28 @@ try {
         // Insert into USER table first
         $userStmt = $connMe->prepare("INSERT INTO USER (FullName, EmailAddress, EmailSecCode, PhoneNo, UserType, BirthDate, Gender, SecQues1, SecQues2, MatricNo) VALUES (?, UPPER(?), ?, ?, UPPER(?), ?, ?, ?, ?, UPPER(?))");
         
+        // Create variables first
+        $fullName = strtoupper($formData['fullName']);
+        $email = $formData['emailChecked'];
+        $emailSecCode = $formData['emailSecCode'];
+        $phoneNo = $formData['phoneChecked'];  // Changed from phoneNo to phoneChecked
+        $userType = $formData['userType'];
+        $birthDate = $formData['birthDate'];
+        $secQues1 = $formData['secQues1'];
+        $secQues2 = $formData['secQues2'];
+        $matricNo = $formData['matricNoDisplay'];
+        
         $userStmt->bind_param("ssssssssss", 
-            strtoupper($formData['fullName']),
-            $formData['emailChecked'],
-            $formData['emailSecCode'],
-            $formData['phoneNo'],
-            $formData['userType'],
-            $formData['birthDate'],
+            $fullName,
+            $email,
+            $emailSecCode,
+            $phoneNo,
+            $userType,
+            $birthDate,
             $gender,
-            $formData['secQues1'],
-            $formData['secQues2'],
-            $formData['matricNo']
+            $secQues1,
+            $secQues2,
+            $matricNo
         );
         
         if (!$userStmt->execute()) {
@@ -152,13 +163,20 @@ try {
         throw new Exception("Error preparing DRIVER statement: " . $connMe->error);
     }
     
+    // Create variables for driver data
+    $username = $formData['username'];
+    $password = $formData['password'];
+    $licenseNo = $formData['licenseNo'];
+    $licenseExpDate = $formData['licenseExpDate'];
+    $stickerExpDate = $formData['stickerExpDate'];
+    
     $driverStmt->bind_param("ssssss",
         $userID,
-        $formData['username'],
-        $formData['password'],
-        $formData['licenseNo'],
-        $formData['licenseExpDate'],
-        $formData['stickerExpDate']
+        $username,
+        $password,
+        $licenseNo,
+        $licenseExpDate,
+        $stickerExpDate
     );
     
     if (!$driverStmt->execute()) {

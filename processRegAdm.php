@@ -56,24 +56,38 @@ try {
     $formData = $data['formData'];
     $isExistingUser = $data['isExistingUser'];
     
-    // Convert gender to single character (M/F) to store in database which only accept M or F
-    $gender = strtoupper($formData['gender']) === 'MALE' ? 'M' : 'F';
-    
     //if the user is not existing (new user) condition
     if (!$isExistingUser) {
+        // Check if gender exists and convert to single character (M/F)
+        if (isset($formData['gender'])) {
+            $gender = strtoupper($formData['gender']) === 'MALE' ? 'M' : 'F';
+        } else {
+            throw new Exception("Gender is required");
+        }
+        
         // Insert into USER table first
         $userStmt = $connMe->prepare("INSERT INTO USER (FullName, EmailAddress, EmailSecCode, PhoneNo, UserType, BirthDate, Gender, SecQues1, SecQues2) VALUES (?, UPPER(?), ?, ?, UPPER(?), ?, ?, ?, ?)");
         
+        //Create variable first
+        $fullName = strtoupper($formData['fullName']);
+        $emailChecked = $formData['emailChecked'];
+        $emailSecCode = $formData['emailSecCode'];
+        $phoneChecked = $formData['phoneChecked'];
+        $userType = $formData['userType'];
+        $birthDate = $formData['birthDate'];
+        $secQues1 = $formData['secQues1'];
+        $secQues2 = $formData['secQues2'];
+
         $userStmt->bind_param("sssssssss", 
-            strtoupper($formData['fullName']),
-            $formData['emailChecked'],
-            $formData['emailSecCode'],
-            $formData['phoneNo'],
-            $formData['userType'],
-            $formData['birthDate'],
+            $fullName,
+            $emailChecked,
+            $emailSecCode,
+            $phoneChecked,
+            $userType,
+            $birthDate,
             $gender,
-            $formData['secQues1'],
-            $formData['secQues2']
+            $secQues1,
+            $secQues2
         );
         
         if (!$userStmt->execute()) {

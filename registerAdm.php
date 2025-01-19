@@ -262,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <!-- Email Input -->
             <div class="form-group" id="emailStep" style="display: none;">
                 <label for="email">Email Address:</label>
-                <input type="text" id="email" name="email" required placeholder="Your active email" autocomplete="off"> <!--check email format-->
+                <input type="text" id="email" name="email" required placeholder="Use staff email if applicable" autocomplete="off"> <!--check email format-->
             </div>
             <span id="emailError" class="error"></span>
 
@@ -544,7 +544,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
 
             } else if (data.status === "exists_none") {
-                emailError.style.color = "green"; // Green for 'exists_user'
+                checkError.style.color = "green"; // Green for 'exists_user'
 
                 //Show all textfield
                 dividerSection.style.display = "block"; 

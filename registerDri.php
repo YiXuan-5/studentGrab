@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $response['status'] = 'exists_user';
 
         // Fetch user details
-        $stmtUser = $connMe->prepare("SELECT FullName, EmailAddress, PhoneNo, UserType, BirthDate, Gender, EmailSecCode, SecQues1, SecQues2 FROM USER WHERE UserID = ?");
+        $stmtUser = $connMe->prepare("SELECT FullName, EmailAddress, PhoneNo, UserType, BirthDate, Gender, EmailSecCode, SecQues1, SecQues2, MatricNo FROM USER WHERE UserID = ?");
         $stmtUser->bind_param("s", $userID);
         $stmtUser->execute();
         $resultUser = $stmtUser->get_result();
@@ -97,7 +97,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'gender' => $userDetails['Gender'],
             'emailSecCode' => $userDetails['EmailSecCode'],
             'secQues1' => $userDetails['SecQues1'],
-            'secQues2' => $userDetails['SecQues2']
+            'secQues2' => $userDetails['SecQues2'],
+            'matricNo' => $userDetails['MatricNo']
         ];
         $stmtUser->close();
     }
@@ -477,10 +478,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         const validateSecCodeButton = document.getElementById("validateSecCodeButton");
 
         const matricForm = document.getElementById("matricForm");
+        //Matric no bfr email n phone form
         const matricNo = document.getElementById("matricNo");
         const matricError = document.getElementById("matricError");
+        //Matric no in basic information field
         const matricNoDisplayError = document.getElementById("matricNoDisplayError");
-        const matricDisplayError = document.getElementById("matricDisplayError");
 
         let validEmail = null;
 
@@ -591,22 +593,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     submitButton.style.display = "none";
                     
                 } else if (data.status === "exists_user") {
-                    // Check age before proceeding
-                    const birthDate = new Date(data.userData.birthDate);
-                    const age = validateAge(birthDate.toISOString().split('T')[0]);
+                    checkError.textContent = "Email or phone number exists. Welcome!\nPlease enter your email's security code.";
+                    checkError.style.whiteSpace = "pre-wrap";
                     
-                    if (age < 19) {
-                        checkError.style.color = "red";
-                        checkError.textContent = "You must be at least 19 years old to register as a driver.";
-                        setTimeout(() => {
-                            window.location.href = 'mainPagePsgrDri.html';
-                        }, 3000); // Redirect after 3 seconds
-                        return;
+                    // Fill in the user's existing data
+                    document.getElementById('fullName').value = data.userData.fullName;
+                    document.getElementById('emailChecked').value = data.userData.emailChecked;
+                    document.getElementById('phoneChecked').value = data.userData.phoneChecked;
+                    document.getElementById('userType').value = data.userData.userType;
+                    document.getElementById('birthDate').value = data.userData.birthDate;
+                   
+                    // Handle matric number display for existing user
+                    const matricInput = document.getElementById('matricNoDisplay');
+                    if (data.userData.matricNo) {
+                        matricInput.value = data.userData.matricNo;
+                    } else {
+                        matricInput.value = '';  // Display null if no matric number
+                    }
+                    matricInput.setAttribute('readonly', true);  // Make it readonly for existing users
+
+                    // Set gender radio button
+                    if (data.userData.gender === 'M') {
+                        document.getElementById('genderMale').checked = true;
+                    } else {
+                        document.getElementById('genderFemale').checked = true;
                     }
 
                     checkError.style.color = "green";
                     dividerSection.style.display = "none";
-                    checkError.textContent = "Email or phone number exists. Welcome!\nPlease enter your email's security code.";
                     checkError.style.whiteSpace = "pre-wrap";
                     userFields.style.display = "none";
                     driverFields.style.display = "none";
@@ -845,10 +859,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Matric No validation
         document.getElementById('matricNoDisplay').addEventListener('blur', async () => {
             const matricNoDisplay = document.getElementById('matricNoDisplay').value.trim().toUpperCase();
+            
+            // For exists_none, matric number is required
+            const isNewUser = checkError.textContent.includes("exists_none");
+            if (isNewUser && !matricNoDisplay) {
+                matricNoDisplayError.textContent = "Matric number cannot be empty.";
+                matricNoDisplayError.style.color = "red";
+                validateForm();
+                return;
+            }
 
             //Check matric number format
             if (!/^[BMD][01][0-9]{8}$/.test(matricNoDisplay)){
-                matricNoDisplayError.textContent = "Invalid matric number format.";
+                matricNoDisplayError.textContent = "Invalid matric number format and cannot be empty.";
                 matricNoDisplayError.style.color = "red";
                 validateForm();
                 return;
@@ -996,7 +1019,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             validateForm();
         });
 
-        // Matric number validation
+        // Matric number validation before email and phone checking
         matricForm.addEventListener("submit", (e) => {
             e.preventDefault();
             const matricValue = matricNo.value.trim().toUpperCase();

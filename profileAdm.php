@@ -1244,7 +1244,7 @@ try {
                 .then(data => {
                     if (data.status === 'success') {
                         alert(data.message);
-                        window.location.href = 'mainPage.html';
+                        window.location.href = 'mainPagePsgrDri.html';
                     } else {
                         alert('Failed to delete account: ' + data.message);
                     }

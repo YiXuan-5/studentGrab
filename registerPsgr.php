@@ -83,7 +83,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $response['status'] = 'exists_user';
 
         // Fetch user details
-        $stmtUser = $connMe->prepare("SELECT FullName, EmailAddress, PhoneNo, UserType, BirthDate, Gender, EmailSecCode, SecQues1, SecQues2 FROM USER WHERE UserID = ?");
+        $stmtUser = $connMe->prepare("SELECT FullName, EmailAddress, PhoneNo, UserType, BirthDate, Gender, EmailSecCode, SecQues1, SecQues2, MatricNo FROM USER WHERE UserID = ?");
         $stmtUser->bind_param("s", $userID);
         $stmtUser->execute();
         $resultUser = $stmtUser->get_result();
@@ -98,7 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'gender' => $userDetails['Gender'],
             'emailSecCode' => $userDetails['EmailSecCode'],
             'secQues1' => $userDetails['SecQues1'],
-            'secQues2' => $userDetails['SecQues2']
+            'secQues2' => $userDetails['SecQues2'],
+            'matricNo' => $userDetails['MatricNo']
         ];
         $stmtUser->close();
     }
@@ -262,7 +263,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <!-- Email Input -->
             <div class="form-group" id="emailStep" style="display: none;">
                 <label for="email">Email Address:</label>
-                <input type="text" id="email" name="email" required placeholder="Your active email" autocomplete="off"> <!--check email format-->
+                <input type="text" id="email" name="email" required placeholder="Use student email if applicable" autocomplete="off"> <!--check email format-->
             </div>
             <span id="emailError" class="error"></span>
 
@@ -300,6 +301,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     <label for="fullName">Full Name:</label>
                     <input type="text" id="fullName" name="fullName" required autocomplete="off">
                 </div>
+                <div class="form-group">
+                    <label for="matricNoDisplay">Matric Number:</label>
+                    <input type="text" id="matricNoDisplay" name="matricNoDisplay" placeholder="If a student, please fill in (optional)"
+                           maxLength="10" autocomplete="off">
+                </div>
+                <span id="matricNoDisplayError" class="error"></span>
                 <div class="form-group">
                     <label for="emailChecked">Email Address:</label>
                     <!--readonly input attribute can allow the value to be passed when click submit button, compared to "disabled"-->
@@ -436,6 +443,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     const securityCodeError = document.getElementById("securityCodeError");
     const validateSecCodeButton = document.getElementById("validateSecCodeButton");
 
+    //Matric no in basic information field
+    const matricNoDisplayError = document.getElementById("matricNoDisplayError");
+
     let validEmail = null;
 
     // Initialize the form based on the radio button state when the page loads
@@ -551,6 +561,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     validEmail = userData.emailChecked;
                 }
 
+                // Handle matric number display for existing user
+                const matricInput = document.getElementById('matricNoDisplay');
+                if (data.userData.matricNo) {
+                    matricInput.value = data.userData.matricNo;
+                } else {
+                    matricInput.value = '';
+                }
+                matricInput.setAttribute('readonly', true);  // Make it readonly for existing users
+
+                // Set gender radio button
+                if (data.userData.gender === 'M') {
+                    document.getElementById('genderMale').checked = true;
+                } else {
+                    document.getElementById('genderFemale').checked = true;
+                }
             } else if (data.status === "exists_none") {
                 checkError.style.color = "green"; // Green for 'exists_none'
 
@@ -564,6 +589,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 checkButton.style.display = "none";
                 emailStep.style.display = "none"; 
                 phoneStep.style.display = "none";
+
+                // For new users, enable matric number input but don't make it required
+                const matricInput = document.getElementById('matricNoDisplay');
+                matricInput.removeAttribute('readonly');
+                matricInput.value = '';
 
             }else if (data.status === "conflict"){
                 checkError.style.color = "red"; 
@@ -664,22 +694,84 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             .then((data) => {
                 if (data.status === "exists") {
                     usernameError.textContent = "Username already exists. Please use another username.";
+                    validateForm();  // Add this to update form validity
                 } else if (data.status === "available") {
                     usernameError.textContent = ""; // Clear error
+                    validateForm();  // Add this to update form validity
                 } else {
                     usernameError.textContent = data.message;
+                    validateForm();  // Add this to update form validity
                 }
             })
             .catch((err) => {
                 console.error("Error:", err);
                 usernameError.textContent = "Error validating username. Please try again.";
+                validateForm();  // Add this to update form validity
             });
     });
 
+    // Matric No validation - only validate if the field is not empty
+    document.getElementById('matricNoDisplay').addEventListener('blur', async () => {
+        const matricNoDisplay = document.getElementById('matricNoDisplay').value.trim();
+        
+        // Clear error if field is empty
+        if (!matricNoDisplay) {
+            matricNoDisplayError.textContent = "";
+            validateForm();
+            return;
+        }
+        
+        //Check matric number format
+        if (!/^[BMD][01][0-9]{8}$/.test(matricNoDisplay.toUpperCase())){
+            matricNoDisplayError.textContent = "Invalid matric number format.";
+            matricNoDisplayError.style.color = "red";
+            validateForm();
+            return;
+        }
 
+        try {
+            const response = await fetch('validateMatricNo.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ matricNoDisplay: matricNoDisplay.toUpperCase() })
+            });
+            const data = await response.json();
+            
+            if (data.status === 'exists') {
+                matricNoDisplayError.textContent = "Matric number already exists.";
+                matricNoDisplayError.style.color = "red";
+            } else {
+                matricNoDisplayError.textContent = "Valid matric number!";
+                matricNoDisplayError.style.color = "green";
+            }
+            validateForm();
+        } catch (error) {
+            console.error('Error:', error);
+            matricNoDisplayError.textContent = "Error checking matric number.";
+            matricNoDisplayError.style.color = "red";
+            validateForm();
+        }
+    });
+        
     // Register button clicked
     registerForm.addEventListener("submit", (e) => {
         e.preventDefault();
+        
+        // Check if this is a new user (exists_none)
+        const isNewUser = checkError.textContent.includes("exists_none");
+        const matricInput = document.getElementById('matricNoDisplay');
+        
+        if (!isNewUser) {
+            // For existing users, remove required and make readonly
+            matricInput.removeAttribute('required');
+            matricInput.setAttribute('readonly', true);
+        } else {
+            // For new users, keep required and editable
+            matricInput.setAttribute('required', true);
+            matricInput.removeAttribute('readonly');
+        }
         
         // Collect all form data using FormData
         const formData = new FormData(registerForm);
@@ -689,7 +781,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         //loop each input
         // name attribute = key, 
-        //the user’s input as the value.
+        //the user's input as the value.
         for (const [key, value] of formData.entries()) {
             console.log(key, value); // This will log each form field's name and value
         
@@ -820,6 +912,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     function validateForm() {
         const pwdValue = passwordInput.value.trim();
         const emailSecCodeValue = emailSecCodeInput.value.trim();
+        const matricNoDisplay = document.getElementById('matricNoDisplay').value.trim();
+        const usernameError = document.getElementById("usernameError");
 
         // Reset error messages
         pwdError.textContent = "";
@@ -827,8 +921,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         let isValid = true;
 
+        // Check if there's a username error
+        if (usernameError.textContent !== "") {
+            isValid = false;
+        }
+
+        // Check if there's an existing matric number error
+        if (matricNoDisplayError.textContent !== "" && 
+            matricNoDisplayError.textContent !== "Valid matric number!") {
+            isValid = false;
+        }
+
         //Vaidate Security Code
-        //if not contain at least 1 lower Case, 1 upperCase, 1 number, 1 special characters, min 4charac, max 8 characters
         if(!/^(?=(.*[a-z]))(?=(.*[A-Z]))(?=(.*[0-9]))(?=(.*[!@#$%^&*]))[a-zA-Z0-9!@#$%^&*]{4,8}$/.test(emailSecCodeValue)){
             emailSecCodeError.textContent = "Must contains lowercase, uppercase, number, special character(!@#$%^&*).";
             isValid = false;
