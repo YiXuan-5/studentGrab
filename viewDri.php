@@ -82,7 +82,9 @@
             flex: 2;
             padding: 20px;
             background-color: white;
+            overflow-x: auto;
             overflow-y: auto;
+            width: 100%;
         }
 
         .section-title {
@@ -116,11 +118,12 @@
             background-color: #4caf50;
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         .button:hover {
@@ -134,6 +137,8 @@
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
+            width: 100%;
+            overflow-x: auto;
         }
 
         .driver-info {
@@ -164,9 +169,9 @@
 
         .driver-info .button-group {
             display: flex;
+            justify-content: center;
             gap: 10px;
             margin-top: 10px;
-            justify-content: center;
             width: 100%;
         }
 
@@ -280,9 +285,10 @@
 
         .result-header {
             display: flex;
-            align-items: center;
             gap: 20px;
-            margin-bottom: 15px;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 10px;
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 5px;
@@ -297,15 +303,10 @@
             color: #000;
         }
 
-        .fas.fa-table {
-            cursor: pointer;
-            color: #000;
-            margin-left: auto;
-        }
-
         /* Add these table styles */
         table {
             width: 100%;
+            min-width: max-content;
             border-collapse: collapse;
             margin-top: 10px;
         }
@@ -334,7 +335,29 @@
             margin: 2px;
             font-size: 14px;
         }
+
+        .generate-report {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .generate-report:hover {
+            background-color: #388e3c;
+        }
+
+        .button i {
+            color: white !important;
+        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
     <!-- Navigation Bar -->
@@ -352,6 +375,7 @@
                 <div class="dropdown-content">
                     <a href="viewPsgr.php">Passenger</a>
                     <a href="viewDri.php">Driver</a>
+                    <a href="viewAdm.php">Admin</a>
                 </div>
             </div>
         </div>
@@ -364,9 +388,9 @@
     </nav>
 
     <!-- Main Content -->
-    <div class="container">
+    <div class="container" style="display: flex !important; justify-content: flex-start !important; width: 100% !important;">
         <!-- Left Section for Search Criteria -->
-        <div class="left-section">
+        <div class="left-section" style="width: 25% !important; max-width: 25% !important; margin-right: 10px !important;">
             <h2 class="section-title">Searching Criteria</h2>
             <div class="search-criteria">
                 <label for="criteria">Select Criteria:</label>
@@ -465,22 +489,31 @@
         </div>
 
         <!-- Right Section for Driver Results -->
-        <div class="right-section">
+        <div class="right-section" style="width: 85% !important; max-width: 85% !important;">
             <h2 class="section-title">Driver Matching Result</h2>
-            <div id="totalUsers" style="font-size: 16px; color: #4caf50; margin-bottom: 15px;">
-                <strong>Total matching users: 0</strong>
+            <div class="result-header">
+                <div id="totalUsers">
+                    <strong>Total matching users: 0</strong>
+                </div>
+                <button class="generate-report" onclick="generatePDF()">
+                    <i class="fas fa-file-pdf"></i> Generate Report
+                </button>
             </div>
             <div id="resultContainer" class="result-container">
                 <div class="result-header">
-                    <span class="header-label"><strong>Driver ID</strong></span>
-                    <i class="fas fa-sort" onclick="toggleSortOrder('driverID')"></i>
-                    <span class="header-label"><strong>User ID</strong></span>
-                    <i class="fas fa-sort" onclick="toggleSortOrder('userID')"></i>
-                    <span class="header-label"><strong>Full Name</strong></span>
-                    <i class="fas fa-sort" onclick="toggleSortOrder('fullName')"></i>
-                    <span class="header-label"><strong>Sticker Expiry</strong></span>
-                    <i class="fas fa-sort" onclick="toggleSortOrder('stickerExpiry')"></i>
-                    <i class="fas fa-table" onclick="toggleViewStyle()" title="Toggle Table View"></i>
+                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div class="header-label">
+                            <strong>Sort by:</strong>
+                            <span onclick="toggleSortOrder('driverID')" style="cursor: pointer;">Driver ID <i class="fas fa-sort"></i></span> |
+                            <span onclick="toggleSortOrder('userID')" style="cursor: pointer;">User ID <i class="fas fa-sort"></i></span> |
+                            <span onclick="toggleSortOrder('fullName')" style="cursor: pointer;">Full Name <i class="fas fa-sort"></i></span> |
+                            <span onclick="toggleSortOrder('stickerExpiry')" style="cursor: pointer;">Sticker Expiry <i class="fas fa-sort"></i></span> |
+                            <span onclick="toggleSortOrder('completedRide')" style="cursor: pointer;">Completed Ride <i class="fas fa-sort"></i></span>
+                        </div>
+                        <button class="button" onclick="toggleViewStyle()">
+                            <i class="fas fa-table"></i> Table View
+                        </button>
+                    </div>
                 </div>
                 <div id="driverDetails"></div>
                 <div id="noResults" class="no-results" style="display: none;">Results not found</div>
@@ -584,15 +617,18 @@
                     const results = JSON.parse(text);
                 const driverDetails = document.getElementById('driverDetails');
                 const noResults = document.getElementById('noResults');
+                const generateReportBtn = document.querySelector('.generate-report');
                 driverDetails.innerHTML = '';
                 noResults.style.display = 'none';
 
                     if (!results || results.error || !Array.isArray(results) || results.length === 0) {
                     noResults.style.display = 'block';
                         updateTotalUsers(0);
-                } else {
+                        generateReportBtn.style.display = 'none';
+                    } else {
                         originalDriverData = results;
                         updateTotalUsers(results.length);
+                        generateReportBtn.style.display = 'flex';
                         renderDrivers();
                     }
                 } catch (e) {
@@ -603,35 +639,8 @@
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('noResults').style.display = 'block';
+                document.querySelector('.generate-report').style.display = 'none';
             });
-        }
-
-        function deleteDriver(driverID, userID) {
-            if (confirm('Are you sure you want to delete this driver account? This action cannot be undone.')) {
-                fetch('deleteAccountDriByAdm.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        driverId: driverID,
-                        userId: userID
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert(data.message);
-                        location.reload();
-                    } else {
-                        alert('Failed to delete account: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while deleting the account');
-                });
-            }
         }
 
         function loadAllDrivers() {
@@ -648,15 +657,18 @@
                     const results = JSON.parse(text);
                 const driverDetails = document.getElementById('driverDetails');
                 const noResults = document.getElementById('noResults');
+                const generateReportBtn = document.querySelector('.generate-report');
                 driverDetails.innerHTML = '';
                 noResults.style.display = 'none';
 
                 if (!results || results.error || !Array.isArray(results) || results.length === 0) {
                     noResults.style.display = 'block';
                         updateTotalUsers(0);
+                        generateReportBtn.style.display = 'none';
                     } else {
                         originalDriverData = results;
                         updateTotalUsers(results.length);
+                        generateReportBtn.style.display = 'flex';
                         renderDrivers();
                     }
                 } catch (e) {
@@ -667,6 +679,7 @@
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('noResults').style.display = 'block';
+                document.querySelector('.generate-report').style.display = 'none';
             });
         }
 
@@ -710,6 +723,12 @@
 
         function toggleViewStyle() {
             isTableView = !isTableView;
+            const button = document.querySelector('.button[onclick="toggleViewStyle()"]');
+            if (isTableView) {
+                button.innerHTML = '<i class="fas fa-id-card"></i> Profile View';
+            } else {
+                button.innerHTML = '<i class="fas fa-table"></i> Table View';
+            }
             renderDrivers();
         }
 
@@ -753,9 +772,18 @@
                             <th>No</th>
                             <th>Driver ID</th>
                             <th>User ID</th>
-                            <th>Full Name</th>
-                            <th>Username</th>
+                            <th>License No</th>
+                            <th>Ehailing License</th>
                             <th>Sticker Expiry</th>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Status</th>
+                            <th>Matric No</th>
+                            <th>Phone No</th>
+                            <th>Birth Date</th>
+                            <th>Gender</th>
+                            <th>Completed Ride</th>
+                            <th>Availability</th>
                             <th>Actions</th>
                         </tr>`;
                 
@@ -765,21 +793,36 @@
                         .split(' ')
                         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                         .join(' ');
+
+                    // Format birth date
+                    const birthDate = new Date(driver.BirthDate).toLocaleDateString('en-GB');
                     
+                    // Format status (ACTIVE/DEACTIVATED to A/DA)
+                    const status = driver.Status === 'ACTIVE' ? 'A' : 'DA';
+                    
+                    // Format availability (AVAILABLE/NOT AVAILABLE to A/NA)
+                    const availability = driver.Availability === 'AVAILABLE' ? 'A' : 'NA';
+
                     tableHTML += `
                         <tr>
                             <td>${index + 1}</td>
                             <td>${driver.DriverID}</td>
                             <td>${driver.UserID}</td>
-                            <td>${formattedFullName}</td>
+                            <td>${driver.LicenseNo || '-'}</td>
+                            <td>${driver.EHailingLicense || '-'}</td>
+                            <td>${new Date(driver.StickerExpDate).toLocaleDateString('en-GB') || '-'}</td>
                             <td>${driver.Username}</td>
-                            <td>${driver.StickerExpDate}</td>
+                            <td>${formattedFullName}</td>
+                            <td>${status}</td>
+                            <td>${driver.MatricNo || '-'}</td>
+                            <td>${driver.PhoneNo || '-'}</td>
+                            <td>${birthDate || '-'}</td>
+                            <td>${driver.Gender === 'M' ? 'M' : (driver.Gender === 'F' ? 'F' : '-')}</td>
+                            <td>${driver.CompletedRide || '0'}</td>
+                            <td>${availability}</td>
                             <td>
                                 <button class="button" onclick="window.location.href='editDri.php?driverID=${driver.DriverID}'">
                                     <i class="fas fa-edit"></i> Edit
-                                </button>
-                                <button class="button" onclick="deleteDriver('${driver.DriverID}', '${driver.UserID}')">
-                                    <i class="fas fa-trash"></i> Delete
                                 </button>
                             </td>
                         </tr>`;
@@ -823,9 +866,6 @@
                                         <button class="button" onclick="window.location.href='editDri.php?driverID=${driver.DriverID}'">
                                             <i class="fas fa-edit"></i> Edit
                                         </button>
-                                        <button class="button" onclick="deleteDriver('${driver.DriverID}', '${driver.UserID}')">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -837,6 +877,102 @@
         // Add this function to update total users count
         function updateTotalUsers(count) {
             document.getElementById('totalUsers').innerHTML = `<strong>Total matching users: ${count}</strong>`;
+        }
+
+        function generatePDF() {
+            // Create a new window for printing
+            const printWindow = window.open('', '_blank');
+            
+            // Add print-specific styles
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Driver Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        table { 
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 20px;
+                        }
+                        th, td { 
+                            border: 1px solid #ddd;
+                            padding: 8px;
+                            text-align: left;
+                            font-size: 12px;
+                        }
+                        th { 
+                            background-color: #4caf50;
+                            color: white;
+                        }
+                        .report-header {
+                            margin-bottom: 20px;
+                        }
+                        @media print {
+                            th { 
+                                background-color: #4caf50 !important;
+                                color: white !important;
+                                -webkit-print-color-adjust: exact;
+                            }
+                            @page {
+                                size: landscape;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="report-header">
+                        <h2>Driver Report</h2>
+                        <p>Generated on: ${new Date().toLocaleString()}</p>
+                        <p>Total Drivers: ${originalDriverData.length}</p>
+                    </div>
+                    <table>
+                        <tr>
+                            <th>No</th>
+                            <th>DriverID</th>
+                            <th>UserID</th>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Status</th>
+                            <th>Matric No</th>
+                            <th>License No</th>
+                            <th>E-Hailing License</th>
+                            <th>Phone</th>
+                            <th>Birth Date</th>
+                            <th>Gender</th>
+                            <th>Sticker Expiry</th>
+                            <th>Completed Ride</th>
+                            <th>Availability</th>
+                        </tr>
+                        ${originalDriverData.map((driver, index) => `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${driver.DriverID}</td>
+                                <td>${driver.UserID}</td>
+                                <td>${driver.Username}</td>
+                                <td>${driver.FullName}</td>
+                                <td>${driver.Status === 'ACTIVE' ? 'A' : 'DA'}</td>
+                                <td>${driver.MatricNo || '-'}</td>
+                                <td>${driver.LicenseNo || '-'}</td>
+                                <td>${driver.EHailingLicense || '-'}</td>
+                                <td>${driver.PhoneNo || '-'}</td>
+                                <td>${new Date(driver.BirthDate).toLocaleDateString('en-GB')}</td>
+                                <td>${driver.Gender === 'M' ? 'M' : (driver.Gender === 'F' ? 'F' : '-')}</td>
+                                <td>${new Date(driver.StickerExpDate).toLocaleDateString('en-GB')}</td>
+                                <td>${driver.CompletedRide || '0'}</td>
+                                <td>${driver.Availability === 'AVAILABLE' ? 'A' : 'NA'}</td>
+                            </tr>
+                        `).join('')}
+                    </table>
+                </body>
+                </html>
+            `);
+            
+            // Wait for content to load then print
+            printWindow.document.close();
+            printWindow.onload = function() {
+                printWindow.print();
+            };
         }
     </script>
 </body>

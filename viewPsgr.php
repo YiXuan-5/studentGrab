@@ -31,7 +31,9 @@
         <title>View Passengers</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+        <!--Include library to create a PDF document.-->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <!--Add structured tables (e.g., with rows and columns) to the PDF.-->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
         <style>
             * {
@@ -76,15 +78,17 @@
             .left-section {
                 flex: 1;
                 padding: 15px;
-                max-width: 300px; /* Reduce search criteria width */
+                max-width: 300px;
                 background-color: #fff3cd;
             }
 
             .right-section {
-                flex: 3; /* Increase the ratio for results section */
+                flex: 3;
                 padding: 20px;
                 background-color: white;
+                overflow-x: auto;
                 overflow-y: auto;
+                width: 100%;
             }
 
             .section-title {
@@ -118,10 +122,9 @@
                 background-color: #4caf50;
                 color: white;
                 border: none;
-                padding: 10px 15px;
+                padding: 8px 15px;
                 border-radius: 5px;
                 cursor: pointer;
-                font-size: 16px;
                 margin-top: 10px;
             }
 
@@ -136,6 +139,8 @@
                 display: flex;
                 flex-wrap: wrap;
                 gap: 20px;
+                width: 100%;
+                overflow-x: auto;
             }
 
             .passenger-info {
@@ -272,25 +277,34 @@
             }
 
             .result-header {
+                width: 100%;
                 display: flex;
                 align-items: center;
                 gap: 20px;
                 margin-bottom: 10px;
+                padding: 10px;
+                background-color: #f8f9fa;
+                border-radius: 5px;
+            }
+
+            .result-header #totalUsers strong,
+            .header-label strong {
+                color: #000;
             }
 
             .header-label {
                 display: flex;
                 align-items: center;
-                gap: 5px; /* Add space between label and icon */
+                gap: 5px;
             }
 
-            .header-label i {
-                cursor: pointer; /* Change cursor to pointer for better usability */
+            .fas.fa-sort {
+                cursor: pointer;
+                color: #000;
             }
 
             #totalUsers {
                 font-size: 16px;
-                color: #4caf50;
             }
 
             .generate-report {
@@ -311,7 +325,9 @@
 
             table {
                 width: 100%;
+                min-width: max-content;
                 border-collapse: collapse;
+                margin-top: 10px;
             }
 
             th, td {
@@ -384,16 +400,6 @@
                 word-break: break-word;
                 vertical-align: middle;
             }
-
-            /* Add horizontal scroll for table */
-            .right-section {
-                overflow-x: auto;
-            }
-
-            /* Ensure table has minimum width */
-            table {
-                min-width: max-content;
-            }
         </style>
     </head>
     <body>
@@ -412,6 +418,7 @@
                     <div class="dropdown-content">
                         <a href="viewPsgr.php">Passenger</a>
                         <a href="viewDri.php">Driver</a>
+                        <a href="viewAdm.php">Admin</a>
                     </div>
                 </div>
             </div>
@@ -537,13 +544,17 @@
                 </div>
                 <div id="resultContainer" class="result-container">
                     <div class="result-header">
-                        <span class="header-label"><strong>Passenger ID</strong></span>
-                        <i class="fas fa-sort" onclick="toggleSortOrder('psgrID')"></i>
-                        <span class="header-label"><strong>User ID</strong></span>
-                        <i class="fas fa-sort" onclick="toggleSortOrder('userID')"></i>
-                        <span class="header-label"><strong>Full Name</strong></span>
-                        <i class="fas fa-sort" onclick="toggleSortOrder('fullName')"></i>
-                        <i class="fas fa-table" onclick="toggleViewStyle()" title="Toggle Table View"></i>
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <div class="header-label">
+                                <strong>Sort by:</strong>
+                                <span onclick="toggleSortOrder('psgrID')" style="cursor: pointer;">Passenger ID <i class="fas fa-sort"></i></span> |
+                                <span onclick="toggleSortOrder('userID')" style="cursor: pointer;">User ID <i class="fas fa-sort"></i></span> |
+                                <span onclick="toggleSortOrder('fullName')" style="cursor: pointer;">Full Name <i class="fas fa-sort"></i></span>
+                            </div>
+                            <button class="button" onclick="toggleViewStyle()">
+                                <i class="fas fa-table"></i> Table View
+                            </button>
+                        </div>
                     </div>
                     <div id="psgrDetails"></div>
                     <div id="noResults" class="no-results" style="display: none;">Results not found</div>
@@ -570,6 +581,12 @@
 
             function toggleViewStyle() {
                 isTableView = !isTableView;
+                const button = document.querySelector('.button[onclick="toggleViewStyle()"]');
+                if (isTableView) {
+                    button.innerHTML = '<i class="fas fa-id-card"></i> Profile View';
+                } else {
+                    button.innerHTML = '<i class="fas fa-table"></i> Table View';
+                }
                 renderPassengers();
             }
 
@@ -823,21 +840,25 @@
                 .then(results => {
                     const psgrDetails = document.getElementById('psgrDetails');
                     const noResults = document.getElementById('noResults');
+                    const generateReportBtn = document.querySelector('.generate-report');
                     psgrDetails.innerHTML = '';
                     noResults.style.display = 'none';
 
                     if (!results || results.error || !Array.isArray(results) || results.length === 0) {
                         noResults.style.display = 'block';
                         updateTotalUsers(0);
+                        generateReportBtn.style.display = 'none';
                     } else {
                         originalPassengerData = results;
                         updateTotalUsers(results.length);
+                        generateReportBtn.style.display = 'flex';
                         renderPassengers();
                     }
                 })
                 .catch(error => {
                     console.error('Full error details:', error);
                     document.getElementById('noResults').style.display = 'block';
+                    document.querySelector('.generate-report').style.display = 'none';
                 });
             }
 

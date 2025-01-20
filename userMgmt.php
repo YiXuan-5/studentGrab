@@ -78,11 +78,17 @@ if (!isset($_SESSION['AdminID'])) {
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
-            padding: 0;
+            padding: 20px 0;
             background-color: #fff3cd;
             height: 100%;
+            overflow-y: auto;
+        }
+
+        .right-section > * {
+            max-width: 800px;
+            width: 100%;
         }
 
         .search-image {
@@ -97,28 +103,44 @@ if (!isset($_SESSION['AdminID'])) {
 
         .instruction {
             text-align: left;
-            font-size: 20px;
+            font-size: 18px;
             color: black;
-            margin-bottom: 30px;
+            margin-left: 140px;
+            margin-bottom: 20px;
             font-family: Arial, sans-serif;
             width: 100%;
-            max-width: 650px;
-            padding-left: 20px;
+            max-width: 800px;
+            padding: 0 20px;
         }
 
         .button-container {
             display: flex;
-            flex-direction: row;
-            gap: 20px;
+            flex-direction: column;
+            gap: 15px;
             width: 100%;
-            max-width: 650px;
+            max-width: 800px;
             justify-content: center;
             align-items: center;
+            padding: 0 20px;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .button-group {
+            width: 280px; /* Fixed width for all buttons */
+            height: 150px; /* Fixed height for all buttons */
         }
 
         .view-button {
-            padding: 25px 40px;
-            font-size: 20px;
+            width: 100%;
+            height: 100%;
+            padding: 20px 15px;
+            font-size: 18px;
             color: white;
             background-color: #4caf50;
             border: none;
@@ -127,22 +149,31 @@ if (!isset($_SESSION['AdminID'])) {
             transition: all 0.3s;
             text-align: center;
             text-decoration: none;
-            min-width: 200px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            justify-content: center;
+            gap: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
+        /* Center the single button in the second row */
+        .button-row:last-child {
+            justify-content: center;
+        }
+
+        .button-row:last-child .button-group {
+            margin: 0 140px; /* Add margin to center the single button */
+        }
+
         .view-button i {
-            font-size: 24px;
-            margin-bottom: 5px;
+            font-size: 20px;
+            margin-bottom: 3px;
         }
 
         .button-desc {
-            font-size: 14px;
-            margin-top: 5px;
+            font-size: 13px;
+            margin-top: 3px;
             opacity: 0.9;
         }
 
@@ -161,20 +192,34 @@ if (!isset($_SESSION['AdminID'])) {
 
         .section-header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+            padding: 0 20px;
         }
 
         .main-title {
-            font-size: 32px;
+            font-size: 28px;
             color: #2e7d32;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-weight: bold;
         }
 
         .sub-title {
-            font-size: 18px;
+            font-size: 16px;
             color: #666;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .button-row {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .button-row:last-child .button-group {
+                margin: 0; /* Remove margin on mobile */
+            }
         }
     </style>
 </head>
@@ -208,21 +253,32 @@ if (!isset($_SESSION['AdminID'])) {
                 <h1 class="main-title">User Management System</h1>
                 <p class="sub-title">Access and manage user information efficiently</p>
             </div>
-            <p class="instruction">Please select a user type to view their details:</p>
+            <p class="instruction">Please select an option to view the details:</p>
             <div class="button-container">
-                <div class="button-group" style="display: inline-block; margin-right: 10px;">
-                    <a href="viewPsgr.php" class="view-button">
-                        <i class="fas fa-users"></i>
-                        <span>Passenger</span>
-                        <p class="button-desc">View passenger details and accounts</p>
-                    </a>
+                <div class="button-row">
+                    <div class="button-group">
+                        <a href="viewPsgr.php" class="view-button">
+                            <i class="fas fa-users"></i>
+                            <span>Passenger</span>
+                            <p class="button-desc">View passenger details and accounts</p>
+                        </a>
+                    </div>
+                    <div class="button-group">
+                        <a href="viewDri.php" class="view-button">
+                            <i class="fas fa-car"></i>
+                            <span>Driver</span>
+                            <p class="button-desc">View driver details and accounts</p>
+                        </a>
+                    </div>
                 </div>
-                <div class="button-group" style="display: inline-block;">
-                    <a href="viewDri.php" class="view-button">
-                        <i class="fas fa-car"></i>
-                        <span>Driver</span>
-                        <p class="button-desc">View driver details and accounts</p>
-                    </a>
+                <div class="button-row">
+                    <div class="button-group">
+                        <a href="viewAdm.php" class="view-button">
+                            <i class="fas fa-user-shield"></i>
+                            <span>Admin</span>
+                            <p class="button-desc">View admin details and accounts</p>
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

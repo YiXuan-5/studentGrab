@@ -53,7 +53,9 @@ try {
     if ($criteria === 'driverID' && !empty($driverID)) {
         $query = "
             SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
-                   u.FullName, u.ProfilePicture
+                   d.LicenseNo, d.EHailingLicense, d.Availability, d.CompletedRide,
+                   u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                   u.Gender, u.PhoneNo, u.BirthDate
             FROM DRIVER d
             INNER JOIN USER u ON d.UserID = u.UserID
             WHERE d.DriverID = ?
@@ -71,7 +73,9 @@ try {
     } else if ($criteria === 'username' && !empty($username)) {
         $query = "
             SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
-                   u.FullName, u.ProfilePicture
+                   d.LicenseNo, d.EHailingLicense, d.Availability, d.CompletedRide,
+                   u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                   u.Gender, u.PhoneNo, u.BirthDate
             FROM DRIVER d
             INNER JOIN USER u ON d.UserID = u.UserID
             WHERE UPPER(d.Username) LIKE UPPER(CONCAT('%', ?, '%'))
@@ -85,7 +89,9 @@ try {
     } else if ($criteria === 'gender' && !empty($gender)) {
         $query = "
             SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
-                   u.FullName, u.ProfilePicture
+                   d.LicenseNo, d.EHailingLicense, d.Availability, d.CompletedRide,
+                   u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                   u.Gender, u.PhoneNo, u.BirthDate
             FROM DRIVER d
             INNER JOIN USER u ON d.UserID = u.UserID
             WHERE u.Gender = ?
@@ -99,7 +105,9 @@ try {
     } else if ($criteria === 'fullName' && !empty($fullName)) {
         $query = "
             SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
-                   u.FullName, u.ProfilePicture
+                   d.LicenseNo, d.EHailingLicense, d.Availability, d.CompletedRide,
+                   u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                   u.Gender, u.PhoneNo, u.BirthDate
             FROM DRIVER d
             INNER JOIN USER u ON d.UserID = u.UserID
             WHERE u.FullName LIKE CONCAT('%', ?, '%')
@@ -113,7 +121,9 @@ try {
     } else if ($criteria === 'stickerExpDate') {
         $query = "
             SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
-                   u.FullName, u.ProfilePicture
+                   d.LicenseNo, d.EHailingLicense, d.Availability, d.CompletedRide,
+                   u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                   u.Gender, u.PhoneNo, u.BirthDate
             FROM DRIVER d
             INNER JOIN USER u ON d.UserID = u.UserID
             ORDER BY d.StickerExpDate ASC
@@ -126,7 +136,9 @@ try {
         $availabilityValue = ($availability === 'Available') ? 'AVAILABLE' : 'NOT AVAILABLE';
         $query = "
             SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
-                   u.FullName, u.ProfilePicture
+                   d.LicenseNo, d.EHailingLicense, d.Availability, d.CompletedRide,
+                   u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                   u.Gender, u.PhoneNo, u.BirthDate
             FROM DRIVER d
             INNER JOIN USER u ON d.UserID = u.UserID
             WHERE d.Availability = ?
@@ -139,7 +151,9 @@ try {
     } else if ($criteria === 'all') {
         $query = "
             SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
-                   u.FullName, u.ProfilePicture
+                   d.LicenseNo, d.EHailingLicense, d.Availability, d.CompletedRide,
+                   u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                   u.Gender, u.PhoneNo, u.BirthDate
             FROM DRIVER d
             INNER JOIN USER u ON d.UserID = u.UserID
             ORDER BY d.DriverID ASC
@@ -184,7 +198,9 @@ try {
     } else if ($criteria === 'matricNo' && !empty($data['matricNo'])) {
         $query = "
             SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
-                   u.FullName, u.ProfilePicture
+                   d.LicenseNo, d.EHailingLicense, d.Availability, d.CompletedRide,
+                   u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                   u.Gender, u.PhoneNo, u.BirthDate
             FROM DRIVER d
             INNER JOIN USER u ON d.UserID = u.UserID
             WHERE u.MatricNo LIKE UPPER(CONCAT('%', ?, '%'))
@@ -198,7 +214,9 @@ try {
     } else if ($criteria === 'status' && !empty($data['status'])) {
         $query = "
             SELECT d.DriverID, d.UserID, d.Username, d.StickerExpDate,
-                   u.FullName, u.ProfilePicture
+                   d.LicenseNo, d.EHailingLicense, d.Availability, d.CompletedRide,
+                   u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                   u.Gender, u.PhoneNo, u.BirthDate
             FROM DRIVER d
             INNER JOIN USER u ON d.UserID = u.UserID
             WHERE u.Status = ?
