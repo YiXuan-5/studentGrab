@@ -500,8 +500,8 @@
                 </button>
             </div>
             <div id="resultContainer" class="result-container">
-                <div class="result-header">
-                    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div class="sort-view-options" style="width: 100%; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="header-label">
                             <strong>Sort by:</strong>
                             <span onclick="toggleSortOrder('driverID')" style="cursor: pointer;">Driver ID <i class="fas fa-sort"></i></span> |
@@ -615,31 +615,36 @@
             .then(text => {
                 try {
                     const results = JSON.parse(text);
-                const driverDetails = document.getElementById('driverDetails');
-                const noResults = document.getElementById('noResults');
-                const generateReportBtn = document.querySelector('.generate-report');
-                driverDetails.innerHTML = '';
-                noResults.style.display = 'none';
+                    const driverDetails = document.getElementById('driverDetails');
+                    const noResults = document.getElementById('noResults');
+                    const generateReportBtn = document.querySelector('.generate-report');
+                    const sortViewOptions = document.querySelector('.sort-view-options');
+                    driverDetails.innerHTML = '';
+                    noResults.style.display = 'none';
 
                     if (!results || results.error || !Array.isArray(results) || results.length === 0) {
-                    noResults.style.display = 'block';
+                        noResults.style.display = 'block';
                         updateTotalUsers(0);
                         generateReportBtn.style.display = 'none';
+                        sortViewOptions.style.display = 'none';
                     } else {
                         originalDriverData = results;
                         updateTotalUsers(results.length);
                         generateReportBtn.style.display = 'flex';
+                        sortViewOptions.style.display = 'block';
                         renderDrivers();
                     }
                 } catch (e) {
                     console.error('JSON parse error:', e);
                     document.getElementById('noResults').style.display = 'block';
+                    document.querySelector('.sort-view-options').style.display = 'none';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('noResults').style.display = 'block';
                 document.querySelector('.generate-report').style.display = 'none';
+                document.querySelector('.sort-view-options').style.display = 'none';
             });
         }
 
@@ -655,31 +660,35 @@
             .then(text => {
                 try {
                     const results = JSON.parse(text);
-                const driverDetails = document.getElementById('driverDetails');
-                const noResults = document.getElementById('noResults');
-                const generateReportBtn = document.querySelector('.generate-report');
-                driverDetails.innerHTML = '';
-                noResults.style.display = 'none';
+                    const driverDetails = document.getElementById('driverDetails');
+                    const noResults = document.getElementById('noResults');
+                    const generateReportBtn = document.querySelector('.generate-report');
+                    const sortViewOptions = document.querySelector('.sort-view-options');
+                    driverDetails.innerHTML = '';
+                    noResults.style.display = 'none';
 
-                if (!results || results.error || !Array.isArray(results) || results.length === 0) {
-                    noResults.style.display = 'block';
+                    if (!results || results.error || !Array.isArray(results) || results.length === 0) {
+                        noResults.style.display = 'block';
                         updateTotalUsers(0);
                         generateReportBtn.style.display = 'none';
+                        sortViewOptions.style.display = 'none';
                     } else {
                         originalDriverData = results;
                         updateTotalUsers(results.length);
                         generateReportBtn.style.display = 'flex';
+                        sortViewOptions.style.display = 'block';
                         renderDrivers();
                     }
                 } catch (e) {
                     console.error('JSON parse error:', e);
                     document.getElementById('noResults').style.display = 'block';
+                    document.querySelector('.sort-view-options').style.display = 'none';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
                 document.getElementById('noResults').style.display = 'block';
-                document.querySelector('.generate-report').style.display = 'none';
+                document.querySelector('.sort-view-options').style.display = 'none';
             });
         }
 

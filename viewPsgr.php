@@ -543,8 +543,8 @@
                     </button>
                 </div>
                 <div id="resultContainer" class="result-container">
-                    <div class="result-header">
-                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <div class="sort-view-options" style="width: 100%; margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
                             <div class="header-label">
                                 <strong>Sort by:</strong>
                                 <span onclick="toggleSortOrder('psgrID')" style="cursor: pointer;">Passenger ID <i class="fas fa-sort"></i></span> |
@@ -556,8 +556,8 @@
                             </button>
                         </div>
                     </div>
-                    <div id="psgrDetails"></div>
                     <div id="noResults" class="no-results" style="display: none;">Results not found</div>
+                    <div id="psgrDetails"></div>
                 </div>
             </div>
         </div>
@@ -841,6 +841,7 @@
                     const psgrDetails = document.getElementById('psgrDetails');
                     const noResults = document.getElementById('noResults');
                     const generateReportBtn = document.querySelector('.generate-report');
+                    const sortViewOptions = document.querySelector('.sort-view-options');
                     psgrDetails.innerHTML = '';
                     noResults.style.display = 'none';
 
@@ -848,10 +849,12 @@
                         noResults.style.display = 'block';
                         updateTotalUsers(0);
                         generateReportBtn.style.display = 'none';
+                        sortViewOptions.style.display = 'none';
                     } else {
                         originalPassengerData = results;
                         updateTotalUsers(results.length);
                         generateReportBtn.style.display = 'flex';
+                        sortViewOptions.style.display = 'block';
                         renderPassengers();
                     }
                 })
@@ -859,6 +862,7 @@
                     console.error('Full error details:', error);
                     document.getElementById('noResults').style.display = 'block';
                     document.querySelector('.generate-report').style.display = 'none';
+                    document.querySelector('.sort-view-options').style.display = 'none';
                 });
             }
 
@@ -905,25 +909,30 @@
                         const results = JSON.parse(text);
                         const psgrDetails = document.getElementById('psgrDetails');
                         const noResults = document.getElementById('noResults');
+                        const sortViewOptions = document.querySelector('.sort-view-options');
                         psgrDetails.innerHTML = '';
                         noResults.style.display = 'none';
 
                         if (!results || results.error || !Array.isArray(results) || results.length === 0) {
                             noResults.style.display = 'block';
                             updateTotalUsers(0);
+                            sortViewOptions.style.display = 'none';
                         } else {
                             originalPassengerData = results;
                             updateTotalUsers(results.length);
+                            sortViewOptions.style.display = 'block';
                             renderPassengers();
                         }
                     } catch (e) {
                         console.error('JSON parse error:', e);
                         document.getElementById('noResults').style.display = 'block';
+                        document.querySelector('.sort-view-options').style.display = 'none';
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     document.getElementById('noResults').style.display = 'block';
+                    document.querySelector('.sort-view-options').style.display = 'none';
                 });
             }
 

@@ -472,10 +472,12 @@
             <div id="departmentField" class="search-criteria" style="display: none;">
                 <label>Department:</label>
                 <div class="radio-group">
-                    <input type="radio" id="hepa" name="department" value="HEPA">
-                    <label for="hepa">HEPA</label>
-                    <input type="radio" id="spku" name="department" value="SPKU">
-                    <label for="spku">SPKU</label>
+                    <label>
+                        <input type="radio" name="department" value="HEPA"> HEPA
+                    </label>
+                    <label>
+                        <input type="radio" name="department" value="SPKU"> SPKU
+                    </label>
                 </div>
                 <button class="button" onclick="searchByDepartment()">Search</button>
             </div>
@@ -484,10 +486,12 @@
             <div id="genderField" class="search-criteria" style="display: none;">
                 <label>Gender:</label>
                 <div class="radio-group">
-                    <input type="radio" id="male" name="gender" value="Male">
-                    <label for="male">Male</label>
-                    <input type="radio" id="female" name="gender" value="Female">
-                    <label for="female">Female</label>
+                    <label>
+                        <input type="radio" name="gender" value="Male"> Male
+                    </label>
+                    <label>
+                        <input type="radio" name="gender" value="Female"> Female
+                    </label>
                 </div>
                 <button class="button" onclick="searchByGender()">Search</button>
             </div>
@@ -503,10 +507,12 @@
             <div id="statusField" class="search-criteria" style="display: none;">
                 <label>Status:</label>
                 <div class="radio-group">
-                    <input type="radio" id="active" name="status" value="ACTIVE">
-                    <label for="active">Active</label>
-                    <input type="radio" id="deactivated" name="status" value="DEACTIVATED">
-                    <label for="deactivated">Deactivated</label>
+                    <label>
+                        <input type="radio" name="status" value="ACTIVE"> Active
+                    </label>
+                    <label>
+                        <input type="radio" name="status" value="DEACTIVATED"> Deactivated
+                    </label>
                 </div>
                 <button class="button" onclick="searchByStatus()">Search</button>
             </div>
