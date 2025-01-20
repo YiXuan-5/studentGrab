@@ -87,7 +87,8 @@
                 background-color: white;
                 overflow-x: auto;
                 overflow-y: auto;
-                width: 100%;
+                width: 85%;
+                max-width: 85%;
             }
 
             .section-title {
@@ -135,11 +136,10 @@
                 border: 1px solid #ddd;
                 padding: 15px;
                 border-radius: 5px;
-                display: flex;
-                flex-wrap: wrap;
                 gap: 20px;
-                width: 100%;
+                min-width: 1200px;
                 overflow-x: auto;
+                white-space: nowrap;
             }
 
             .passenger-info {
@@ -190,7 +190,8 @@
             .no-results {
                 color: red;
                 font-size: 18px;
-                text-align: center;
+                text-align: left;
+                margin-left: 15px;
             }
 
             .radio-group {
@@ -277,7 +278,7 @@
             }
 
             .result-header {
-                width: 100%;
+                min-width: 1200px;
                 display: flex;
                 align-items: center;
                 gap: 20px;
@@ -323,82 +324,118 @@
                 background-color: #388e3c;
             }
 
+            /* Table styles */
             table {
                 width: 100%;
-                min-width: max-content;
                 border-collapse: collapse;
                 margin-top: 10px;
-            }
-
-            th, td {
                 border: 1px solid #ddd;
-                padding: 8px;
-                text-align: left;
-                font-size: 14px;
-                max-width: 150px; /* Limit maximum width */
-                overflow-wrap: break-word; /* Allow text to wrap */
-                word-wrap: break-word;
+                table-layout: fixed;
+                min-width: 1200px;
             }
 
-            th {
-                position: sticky;
-                top: 0;
-                background-color: #4caf50;
-                z-index: 10;
-            }
-
-            /* Adjust column widths */
-            th:nth-child(1), td:nth-child(1) { width: 40px; } /* No */
-            th:nth-child(2), td:nth-child(2) { width: 90px; } /* Passenger ID */
-            th:nth-child(3), td:nth-child(3) { width: 80px; } /* User ID */
-            th:nth-child(4), td:nth-child(4) { width: 90px; } /* Username */
-            th:nth-child(5), td:nth-child(5) { width: 120px; } /* Full Name */
-            th:nth-child(6), td:nth-child(6) { width: 60px; } /* Status */
-            th:nth-child(7), td:nth-child(7) { width: 90px; } /* Matric No */
-            th:nth-child(8), td:nth-child(8) { width: 100px; } /* Role */
-            th:nth-child(9), td:nth-child(9) { width: 150px; white-space: normal; } /* Email Address */
-            th:nth-child(10), td:nth-child(10) { width: 120px; } /* Phone No */
-            th:nth-child(11), td:nth-child(11) { width: 90px; } /* Birth Date */
-            th:nth-child(12), td:nth-child(12) { width: 60px; } /* Gender */
-            th:nth-child(13), td:nth-child(13) { width: 120px; white-space: normal; } /* Fav Pick Up */
-            th:nth-child(14), td:nth-child(14) { width: 120px; white-space: normal; } /* Fav Drop Off */
-            th:last-child, td:last-child { 
-                width: 60px; /* Actions */
-                text-align: center;
-            }
-
-            th {
-                background-color: #4caf50; /* Green background for headers */
-                color: white; /* White font color for headers */
-            }
-
-            table td .button {
-                padding: 4px 8px;
-                margin: 0;
-                font-size: 13px;
-            }
-
+            table th,
             table td {
+                padding: 12px 15px;
+                text-align: left;
+                border-right: 1px solid #ddd;
+                border-bottom: 1px solid #ddd;
+                overflow: hidden;
+                white-space: normal;
+                word-break: normal;
+                word-wrap: break-word;
                 vertical-align: middle;
             }
 
-            /* Adjust the actions column width */
-            table th:last-child,
-            table td:last-child {
-                min-width: 160px;
-                text-align: center;
+            table th {
+                background-color: #4caf50;
+                color: white;
+                font-weight: bold;
+                border-bottom: 2px solid #388e3c;
+                white-space: normal;
+                word-wrap: break-word;
+                line-height: 1.2;
+                min-height: 50px;
+                word-break: keep-all;
+                hyphens: none;
             }
 
-            /* Add hover effect to table rows */
+            /* Specific handling for column headers */
+            th:nth-child(1) { width: 50px; white-space: nowrap; } /* No */
+            th:nth-child(2) { width: 100px; white-space: nowrap; } /* Admin ID */
+            th:nth-child(3) { width: 100px; white-space: nowrap; } /* User ID */
+            th:nth-child(4) { width: 120px; white-space: nowrap; } /* Username */
+            th:nth-child(5) { width: 150px; white-space: nowrap; } /* Full Name */
+            th:nth-child(6) { width: 80px; white-space: nowrap; } /* Status */
+            th:nth-child(7) { width: 110px; white-space: nowrap; } /* Department */
+            th:nth-child(8) { width: 120px; white-space: nowrap; } /* Position */
+            th:nth-child(9) { width: 200px; white-space: nowrap; } /* Email Address */
+            th:nth-child(10) { width: 120px; white-space: nowrap; } /* Phone No */
+            th:nth-child(11) { width: 80px; white-space: nowrap; } /* Gender */
+            th:nth-child(12) { width: 100px; white-space: nowrap; } /* Birth Date */
+            th:nth-child(13) { width: 70px; white-space: nowrap; } /* Action */
+
+            /* Table row hover effect */
+            table tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
             table tr:hover {
                 background-color: #f5f5f5;
             }
 
-            /* Allow text wrapping for long content */
+            /* Table cell content */
             td {
-                white-space: normal;
+                overflow: hidden;
+                padding: 12px 8px;
+                line-height: 1.4;
+                font-size: 14px;
+                word-break: normal;
+                word-wrap: break-word;
+                hyphens: auto;
+            }
+
+            /* Email address special handling */
+            td:nth-child(9) {
                 word-break: break-word;
-                vertical-align: middle;
+                word-wrap: break-word;
+            }
+
+            .result-container {
+                overflow-x: auto;
+                padding-bottom: 15px;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+                margin-top: 10px;
+                min-width: 100%;
+            }
+
+            /* Action button in table */
+            table .button {
+                padding: 6px 12px;
+                font-size: 13px;
+                margin: 0;
+            }
+
+            table .button i {
+                margin-right: 5px;
+            }
+
+            /* Profile view styles */
+            #adminDetails {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+                width: 100%;
+                margin-top: 15px;
+            }
+
+            .passenger-info {
+                width: 100%;
+                margin: 0;
+                box-sizing: border-box;
             }
     </style>
 </head>
@@ -715,7 +752,7 @@
                         </button>
                     </div>
                 </div>
-                <div id="adminDetails" style="width: 100%;">
+                <div id="adminDetails">
                     ${admins.map((admin, index) => `
                         <div class="passenger-info">
                             <img src="${admin.ProfilePicture ? 'data:image/jpeg;base64,' + admin.ProfilePicture : 'https://img.freepik.com/premium-vector/green-circle-with-white-person-inside-icon_1076610-14570.jpg'}" alt="Profile Picture">
@@ -737,7 +774,7 @@
                                     <span class="detail-value">${admin.Username}</span>
                                 </div>
                                 <div class="button-group">
-                                    <button class="button" onclick="window.location.href='profileAdm.php?adminID=${admin.AdminID}'">
+                                    <button class="button" onclick="window.location.href='viewAccAdm.php?adminID=${admin.AdminID}'">
                                         <i class="fas fa-eye"></i> View
                                     </button>
                                 </div>
@@ -756,7 +793,7 @@
             container.innerHTML = '';
             container.appendChild(noResults);
             
-            container.innerHTML += `
+            let tableHTML = `
                 <div style="width: 100%; margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div class="header-label">
@@ -771,27 +808,27 @@
                         </button>
                     </div>
                 </div>
-                <table>
-                    <tr>
-                        <th>No</th>
-                        <th>Admin ID</th>
-                        <th>User ID</th>
-                        <th>Username</th>
-                        <th>Full Name</th>
-                        <th>Status</th>
-                        <th>Department</th>
-                        <th>Position</th>
-                        <th>Email Address</th>
-                        <th>Phone No</th>
-                        <th>Gender</th>
-                        <th>Birth Date</th>
-                        <th>Action</th>
-                    </tr>
+                <div class="table-wrapper">
+                    <table>
+                        <tr>
+                            <th title="No">No</th>
+                            <th title="Admin ID">Admin ID</th>
+                            <th title="User ID">User ID</th>
+                            <th title="Username">Username</th>
+                            <th title="Full Name">Full Name</th>
+                            <th title="Status">Status</th>
+                            <th title="Department">Department</th>
+                            <th title="Position">Position</th>
+                            <th title="Email Address">Email Address</th>
+                            <th title="Phone No">Phone No</th>
+                            <th title="Gender">Gender</th>
+                            <th title="Birth Date">Birth Date</th>
+                        </tr>
             `;
 
             admins.forEach((admin, index) => {
                 const birthDate = admin.BirthDate ? new Date(admin.BirthDate).toLocaleDateString('en-GB') : '-';
-                container.innerHTML += `
+                tableHTML += `
                     <tr>
                         <td>${index + 1}</td>
                         <td>${admin.AdminID}</td>
@@ -806,15 +843,17 @@
                         <td>${admin.Gender === 'M' ? 'M' : (admin.Gender === 'F' ? 'F' : '-')}</td>
                         <td>${birthDate}</td>
                         <td>
-                            <button class="button" onclick="window.location.href='profileAdm.php?adminID=${admin.AdminID}'">
-                                <i class="fas fa-eye"></i> View
-                            </button>
+                            <a href="viewAccAdm.php?adminID=${admin.AdminID}">View</a>
                         </td>
                     </tr>
                 `;
             });
 
-            container.innerHTML += '</table>';
+            tableHTML += `
+                    </table>
+                </div>
+            `;
+            container.innerHTML += tableHTML;
         }
 
         // Toggle view function
@@ -844,6 +883,9 @@
                 return 0;
             });
 
+            // Update the original data to maintain sort order
+            originalAdminData = sortedData;
+            
             renderAdmins(sortedData);
         }
 
@@ -908,7 +950,7 @@
                             <th>Gender</th>
                             <th>Birth Date</th>
                         </tr>
-                        ${originalAdminData.map((admin, index) => `
+                        ${[...originalAdminData].map((admin, index) => `
                             <tr>
                                 <td>${index + 1}</td>
                                 <td>${admin.AdminID}</td>

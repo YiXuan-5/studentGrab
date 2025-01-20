@@ -488,9 +488,8 @@ try {
 
         /* Action buttons */
         .button-group {
-            display: flex;
-            gap: 15px;
             margin-top: 20px;
+            text-align: center;
         }
 
         .button {
@@ -498,7 +497,7 @@ try {
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            width: 50%;
+            width: calc(50% - 10px);
             font-family: Arial, sans-serif;
         }
 
@@ -506,20 +505,14 @@ try {
             background-color: #4caf50;
             color: white;
             border: none;
-        }
-
-        .save-btn:hover {
-            background-color: #388e3c;
+            flex: 1;
         }
 
         .cancel-btn {
             background-color: white;
             color: #ff4444;
             border: 2px solid #ff4444;
-        }
-
-        .cancel-btn:hover {
-            background-color: #ffebeb;
+            flex: 1;
         }
 
         /* Update the button styles */
@@ -543,12 +536,13 @@ try {
             background-color: #ff4444;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 30px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            width: 50%;
-            transition: background-color 0.3s;
+            width: 200px;
+            margin: 0 auto;
+            display: block;
         }
 
         .log-out:hover {
@@ -713,6 +707,37 @@ try {
             min-width: 20px; /* Minimum width to make it look nice */
             text-align: center;
             line-height: 1.2;
+        }
+        /* Modal button styles */
+        .modal-buttons {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: calc(50% - 10px);
+            font-family: Arial, sans-serif;
+        }
+
+        .save-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            flex: 1;
+        }
+
+        .cancel-btn {
+            background-color: white;
+            color: #ff4444;
+            border: 2px solid #ff4444;
+            flex: 1;
         }
     </style>
 </head>
@@ -988,7 +1013,6 @@ try {
 
         <!-- Action Buttons -->
         <div class="button-group">
-            <button onclick="deleteAccount()" class="delete-account">Delete Account</button>
             <button onclick="logout()" class="log-out">Log Out</button>
         </div>
     </div>
@@ -1127,7 +1151,7 @@ try {
                     </div>
                 </div>
 
-                <div class="button-group">
+                <div class="modal-buttons">
                     <button type="button" class="button cancel-btn" onclick="closeEditModal()">Cancel</button>
                     <button type="submit" class="button save-btn">Save Changes</button>
                 </div>
@@ -1196,7 +1220,7 @@ try {
                     <span id="matricNoError" class="error"></span>
                 </div>
 
-                <div class="button-group">
+                <div class="modal-buttons">
                     <button type="button" class="button cancel-btn" onclick="closePersonalModal()">Cancel</button>
                     <button type="submit" class="button save-btn">Save Changes</button>
                 </div>
@@ -1241,7 +1265,7 @@ try {
                            value="<?php echo date('Y-m-d', strtotime($userData['StickerExpDate'])); ?>" readonly class="readonly">
                 </div>
 
-                <div class="button-group">
+                <div class="modal-buttons">
                     <button type="button" class="button cancel-btn" onclick="closeModal('editServiceModal')">Cancel</button>
                     <button type="submit" class="button save-btn">Save Changes</button>
                 </div>
@@ -1296,7 +1320,7 @@ try {
                     </select>
                 </div>
 
-                <div class="button-group">
+                <div class="modal-buttons">
                     <button type="button" class="button cancel-btn" onclick="closeEditVehicleModal()">Cancel</button>
                     <button type="submit" class="button save-btn">Save Changes</button>
                 </div>
@@ -1337,7 +1361,7 @@ try {
                     </select>
                 </div>
 
-                <div class="button-group">
+                <div class="modal-buttons">
                     <button type="button" class="button cancel-btn" onclick="closeAddVehicleModal()">Cancel</button>
                     <button type="submit" class="button save-btn">Save</button>
                 </div>
@@ -1683,7 +1707,7 @@ try {
                 window.location.href = 'logoutDri.php';
             }
         }
-
+        /*
         function deleteAccount() {
             if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
                 fetch('deleteAccountDri.php', {
@@ -1711,7 +1735,7 @@ try {
                 });
             }
         }
-
+        */
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Set up year manufactured dropdown for vehicle forms

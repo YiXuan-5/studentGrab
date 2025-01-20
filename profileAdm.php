@@ -292,10 +292,8 @@ try {
         }
 
         .button-group {
-            display: flex;
-            gap: 15px;
             margin-top: 20px;
-            align-items: stretch; /* Ensure buttons stretch to same height */
+            text-align: center;
         }
 
         .delete-btn, .logout-btn {
@@ -571,6 +569,23 @@ try {
             margin-left: 10px;
             font-weight: normal;
         }
+
+        .log-out {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 200px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .log-out:hover {
+            background-color: #cc0000;
+        }
     </style>
 </head>
 <body>
@@ -663,7 +678,7 @@ try {
             </div>
             <div class="profile-field">
                 <span class="field-label">Security Question 2</span>
-                <span class="field-value">What first city did you visited on your vacation?</span>
+                <span class="field-label">What first city did you visited on your vacation?</span>
             </div>
             <div class="profile-field">
                 <span class="field-label">Answer 2</span>
@@ -721,9 +736,9 @@ try {
             </div>
         </div>
 
+        <!-- Action Buttons -->
         <div class="button-group">
-            <button class="delete-btn" onclick="deleteAccount()">Delete Account</button>
-            <button class="logout-btn" onclick="logout()">Log Out</button>
+            <button onclick="logout()" class="log-out">Log Out</button>
         </div>
     </div>
 
@@ -1041,16 +1056,6 @@ try {
                 }
             }
 
-            // Get security question values
-            const secQues1 = document.getElementById('secQues1').value.trim();
-            const secQues2 = document.getElementById('secQues2').value.trim();
-
-            // Validate security questions
-            if (!secQues1 || !secQues2) {
-                alert('Security question answers cannot be empty');
-                return;
-            }
-
             try {
                 const response = await fetch('updateAccountAdm.php', {
                     method: 'POST',
@@ -1063,8 +1068,8 @@ try {
                         password: document.getElementById('password').value,
                         email: document.getElementById('email').value.trim(),
                         securityCode: document.getElementById('securityCode').value,
-                        secQues1: secQues1,
-                        secQues2: secQues2,
+                        secQues1: document.getElementById('secQues1').value.trim() || null,
+                        secQues2: document.getElementById('secQues2').value.trim() || null,
                         userId: '<?php echo $_SESSION['UserID']; ?>',
                         adminId: '<?php echo $_SESSION['AdminID']; ?>'
                     })
@@ -1236,7 +1241,7 @@ try {
                 window.location.href = 'logoutAdm.php';
             }
         }
-
+    /*
         function deleteAccount() {
             if (confirm('Are you sure you want to delete your admin account? This will remove your admin privileges.')) {
                 fetch('deleteAccountAdm.php', {
@@ -1264,7 +1269,7 @@ try {
                 });
             }
         }
-
+    */
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const icon = event.currentTarget.querySelector('i');

@@ -243,12 +243,13 @@ try {
             background-color: #ff4444;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 30px;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 20px;
-            width: 100%;
+            width: 200px;
             font-size: 16px;
+            margin: 0 auto;
+            display: block;
         }
 
         .logout-btn:hover {
@@ -309,39 +310,20 @@ try {
         }
 
         .button-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 20px;
-            align-items: stretch; /* Ensure buttons stretch to same height */
-        }
-
-        .delete-btn, .logout-btn {
-            padding: 12px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            width: 50%;
-            transition: all 0.3s ease;
-            display: inline-block; /* Change from flex to inline-block */
-            text-align: center; /* Center the text */
-            margin: 0; /* Remove any default margins */
-            box-sizing: border-box; /* Include padding in width calculation */
-        }
-
-        .delete-btn {
-            background-color: white;
-            color: #ff4444;
-            border: 2px solid #ff4444;
-        }
-
-        .delete-btn:hover {
-            background-color: #ffebeb;
+            text-align: center;
         }
 
         .logout-btn {
             background-color: #ff4444;
             color: white;
             border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 200px;
+            font-size: 16px;
+            margin: 0 auto;
+            display: block;
         }
 
         .logout-btn:hover {
@@ -760,8 +742,8 @@ try {
             </div>
         </div>
 
+        <!-- Action Buttons -->
         <div class="button-group">
-            <button class="delete-btn" onclick="deleteAccount()">Delete Account</button>
             <button class="logout-btn" onclick="logout()">Log Out</button>
         </div>
     </div>
@@ -1286,7 +1268,7 @@ try {
                 window.location.href = 'logoutPsgr.php';
             }
         }
-
+/*
         function deleteAccount() {
             if (confirm('Are you sure you want to delete your passenger account? This will remove your passenger privileges.')) {
                 fetch('deleteAccountPsgr.php', {
@@ -1314,7 +1296,7 @@ try {
                 });
             }
         }
-
+*/
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const icon = event.currentTarget.querySelector('i');
