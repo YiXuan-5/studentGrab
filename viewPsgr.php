@@ -31,6 +31,8 @@
         <title>View Passengers</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
         <style>
             * {
                 margin: 0;
@@ -73,12 +75,13 @@
 
             .left-section {
                 flex: 1;
-                padding: 20px;
+                padding: 15px;
+                max-width: 300px; /* Reduce search criteria width */
                 background-color: #fff3cd;
             }
 
             .right-section {
-                flex: 2;
+                flex: 3; /* Increase the ratio for results section */
                 padding: 20px;
                 background-color: white;
                 overflow-y: auto;
@@ -271,8 +274,8 @@
             .result-header {
                 display: flex;
                 align-items: center;
-                gap: 30px; /* Add gap between sorting criteria */
-                margin-bottom: 10px; /* Optional: Add some margin below the header */
+                gap: 20px;
+                margin-bottom: 10px;
             }
 
             .header-label {
@@ -285,15 +288,67 @@
                 cursor: pointer; /* Change cursor to pointer for better usability */
             }
 
+            #totalUsers {
+                font-size: 16px;
+                color: #4caf50;
+            }
+
+            .generate-report {
+                background-color: #4caf50;
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 5px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+            .generate-report:hover {
+                background-color: #388e3c;
+            }
+
             table {
                 width: 100%;
-                border-collapse: collapse; /* Ensures borders are shared between cells */
+                border-collapse: collapse;
             }
 
             th, td {
-                border: 1px solid #ddd; /* Adds border to table cells */
-                padding: 8px; /* Adds padding for better readability */
-                text-align: left; /* Aligns text to the left */
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+                font-size: 14px;
+                max-width: 150px; /* Limit maximum width */
+                overflow-wrap: break-word; /* Allow text to wrap */
+                word-wrap: break-word;
+            }
+
+            th {
+                position: sticky;
+                top: 0;
+                background-color: #4caf50;
+                z-index: 10;
+            }
+
+            /* Adjust column widths */
+            th:nth-child(1), td:nth-child(1) { width: 40px; } /* No */
+            th:nth-child(2), td:nth-child(2) { width: 90px; } /* Passenger ID */
+            th:nth-child(3), td:nth-child(3) { width: 80px; } /* User ID */
+            th:nth-child(4), td:nth-child(4) { width: 90px; } /* Username */
+            th:nth-child(5), td:nth-child(5) { width: 120px; } /* Full Name */
+            th:nth-child(6), td:nth-child(6) { width: 60px; } /* Status */
+            th:nth-child(7), td:nth-child(7) { width: 90px; } /* Matric No */
+            th:nth-child(8), td:nth-child(8) { width: 100px; } /* Role */
+            th:nth-child(9), td:nth-child(9) { width: 150px; white-space: normal; } /* Email Address */
+            th:nth-child(10), td:nth-child(10) { width: 120px; } /* Phone No */
+            th:nth-child(11), td:nth-child(11) { width: 90px; } /* Birth Date */
+            th:nth-child(12), td:nth-child(12) { width: 60px; } /* Gender */
+            th:nth-child(13), td:nth-child(13) { width: 120px; white-space: normal; } /* Fav Pick Up */
+            th:nth-child(14), td:nth-child(14) { width: 120px; white-space: normal; } /* Fav Drop Off */
+            th:last-child, td:last-child { 
+                width: 60px; /* Actions */
+                text-align: center;
             }
 
             th {
@@ -302,9 +357,9 @@
             }
 
             table td .button {
-                padding: 5px 10px;
-                margin: 2px;
-                font-size: 14px;
+                padding: 4px 8px;
+                margin: 0;
+                font-size: 13px;
             }
 
             table td {
@@ -323,6 +378,22 @@
                 background-color: #f5f5f5;
             }
 
+            /* Allow text wrapping for long content */
+            td {
+                white-space: normal;
+                word-break: break-word;
+                vertical-align: middle;
+            }
+
+            /* Add horizontal scroll for table */
+            .right-section {
+                overflow-x: auto;
+            }
+
+            /* Ensure table has minimum width */
+            table {
+                min-width: max-content;
+            }
         </style>
     </head>
     <body>
@@ -456,8 +527,13 @@
             <!-- Right Section for Passenger Results -->
             <div class="right-section">
                 <h2 class="section-title">Passenger Matching Result</h2>
-                <div id="totalUsers" style="font-size: 16px; color: #4caf50; margin-bottom: 15px;">
-                    <strong>Total matching users: 0</strong>
+                <div class="result-header">
+                    <div id="totalUsers">
+                        <strong>Total matching users: 0</strong>
+                    </div>
+                    <button class="generate-report" onclick="generatePDF()">
+                        <i class="fas fa-file-pdf"></i> Generate Report
+                    </button>
                 </div>
                 <div id="resultContainer" class="result-container">
                     <div class="result-header">
@@ -502,14 +578,25 @@
                 psgrDetails.innerHTML = '';
 
                 if (isTableView) {
+                    // Add a wrapper div for horizontal scrolling
+                    psgrDetails.innerHTML = '<div style="overflow-x: auto;">';
                     let tableHTML = `
                         <table>
                             <tr>
                                 <th>No</th>
                                 <th>Passenger ID</th>
                                 <th>User ID</th>
-                                <th>Full Name</th>
                                 <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Status</th>
+                                <th>Matric No</th>
+                                <th>Role</th>
+                                <th>Email Address</th>
+                                <th>Phone No</th>
+                                <th>Birth Date</th>
+                                <th>Gender</th>
+                                <th>Fav Pick Up</th>
+                                <th>Fav Drop Off</th>
                                 <th>Actions</th>
                             </tr>`;
                     
@@ -520,25 +607,37 @@
                             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
                             .join(' ');
                         
+                        // Format birth date
+                        const birthDate = new Date(passenger.BirthDate).toLocaleDateString('en-GB');
+                        
+                        // Format status (ACTIVE/DEACTIVATED to A/DA)
+                        const status = passenger.Status === 'ACTIVE' ? 'A' : 'DA';
+                        
                         tableHTML += `
                             <tr>
                                 <td>${index + 1}</td>
                                 <td>${passenger.PsgrID}</td>
                                 <td>${passenger.UserID}</td>
-                                <td>${formattedFullName}</td>
                                 <td>${passenger.Username}</td>
+                                <td>${formattedFullName}</td>
+                                <td>${status || '-'}</td>
+                                <td>${passenger.MatricNo || '-'}</td>
+                                <td>${passenger.Role || '-'}</td>
+                                <td>${passenger.EmailAddress || '-'}</td>
+                                <td>${passenger.PhoneNo || '-'}</td>
+                                <td>${birthDate || '-'}</td>
+                                <td>${passenger.Gender || '-'}</td>
+                                <td>${passenger.FavPickUpLoc || '-'}</td>
+                                <td>${passenger.FavDropOffLoc || '-'}</td>
                                 <td>
                                     <button class="button" onclick="window.location.href='editPsgr.php?passengerID=${passenger.PsgrID}'">
                                         <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button class="button" onclick="deletePassenger('${passenger.PsgrID}', '${passenger.UserID}')">
-                                        <i class="fas fa-trash"></i> Delete
                                     </button>
                                 </td>
                             </tr>`;
                     });
                     tableHTML += '</table>';
-                    psgrDetails.innerHTML += tableHTML;
+                    psgrDetails.innerHTML += tableHTML + '</div>';
                 } else {
                     originalPassengerData.forEach(passenger => {
                         const formattedFullName = passenger.FullName
@@ -570,9 +669,6 @@
                                     <div class="button-group">
                                         <button class="button" onclick="window.location.href='editPsgr.php?passengerID=${passenger.PsgrID}'">
                                             <i class="fas fa-edit"></i> Edit
-                                        </button>
-                                        <button class="button" onclick="deletePassenger('${passenger.PsgrID}', '${passenger.UserID}')">
-                                            <i class="fas fa-trash"></i> Delete
                                         </button>
                                     </div>
                                 </div>
@@ -662,6 +758,7 @@
                 const favDropOffLoc = document.getElementById('dropoffLocation').value;
                 const role = document.querySelector('input[name="role"]:checked') ? document.querySelector('input[name="role"]:checked').value : '';
                 const gender = document.querySelector('input[name="gender"]:checked') ? document.querySelector('input[name="gender"]:checked').value : '';
+                
                 const status = document.querySelector('input[name="status"]:checked') ? document.querySelector('input[name="status"]:checked').value.toUpperCase() : '';
                 
                 // Log all data being sent
@@ -811,6 +908,100 @@
 
             // Call the function when the page loads
             window.onload = loadAllPassengers;
+
+            function generatePDF() {
+                // Create a new window for printing
+                const printWindow = window.open('', '_blank');
+                
+                // Add print-specific styles
+                printWindow.document.write(`
+                    <html>
+                    <head>
+                        <title>Passenger Report</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; }
+                            table { 
+                                width: 100%;
+                                border-collapse: collapse;
+                                margin-top: 20px;
+                            }
+                            th, td { 
+                                border: 1px solid #ddd;
+                                padding: 8px;
+                                text-align: left;
+                                font-size: 12px;
+                            }
+                            th { 
+                                background-color: #4caf50;
+                                color: white;
+                            }
+                            .report-header {
+                                margin-bottom: 20px;
+                            }
+                            @media print {
+                                th { 
+                                    background-color: #4caf50 !important;
+                                    color: white !important;
+                                    -webkit-print-color-adjust: exact;
+                                }
+                                @page {
+                                    size: landscape;
+                                }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="report-header">
+                            <h2>Passenger Report</h2>
+                            <p>Generated on: ${new Date().toLocaleString()}</p>
+                            <p>Total Passengers: ${originalPassengerData.length}</p>
+                        </div>
+                        <table>
+                            <tr>
+                                <th>No</th>
+                                <th>PsgrID</th>
+                                <th>UserID</th>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Status</th>
+                                <th>Matric No</th>
+                                <th>Role</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Birth Date</th>
+                                <th>Gender</th>
+                                <th>Fav Pick Up</th>
+                                <th>Fav Drop Off</th>
+                            </tr>
+                            ${originalPassengerData.map((passenger, index) => `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${passenger.PsgrID}</td>
+                                    <td>${passenger.UserID}</td>
+                                    <td>${passenger.Username}</td>
+                                    <td>${passenger.FullName}</td>
+                                    <td>${passenger.Status === 'ACTIVE' ? 'A' : 'DA'}</td>
+                                    <td>${passenger.MatricNo || '-'}</td>
+                                    <td>${passenger.Role || '-'}</td>
+                                    <td>${passenger.EmailAddress || '-'}</td>
+                                    <td>${passenger.PhoneNo || '-'}</td>
+                                    <td>${new Date(passenger.BirthDate).toLocaleDateString('en-GB')}</td>
+                                    <td>${passenger.Gender || '-'}</td>
+                                    <td>${passenger.FavPickUpLoc || '-'}</td>
+                                    <td>${passenger.FavDropOffLoc || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                    </body>
+                    </html>
+                `);
+                
+                // Wait for content to load then print
+                printWindow.document.close();
+                printWindow.onload = function() {
+                    printWindow.print();
+                };
+            }
         </script>
     </body>
     </html> 

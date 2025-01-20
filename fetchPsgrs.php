@@ -54,8 +54,9 @@ $results = [];
 try {
     if ($criteria === 'psgrID' && !empty($passengerID)) {
         $query = "
-            SELECT p.PsgrID, p.UserID, p.Username, 
-                   u.FullName, u.ProfilePicture
+            SELECT p.PsgrID, p.UserID, p.Username, p.Role, p.FavPickUpLoc, p.FavDropOffLoc,
+                  u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                  u.EmailAddress, u.PhoneNo, u.BirthDate, u.Gender
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             WHERE p.PsgrID = ?
@@ -92,8 +93,9 @@ try {
         }
     }else if ($criteria === 'role' && !empty($role)) {
         $query = "
-            SELECT p.PsgrID, p.UserID, p.Username, 
-                   u.FullName, u.ProfilePicture
+            SELECT p.PsgrID, p.UserID, p.Username, p.Role, p.FavPickUpLoc, p.FavDropOffLoc,
+                  u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                  u.EmailAddress, u.PhoneNo, u.BirthDate, u.Gender
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             WHERE p.Role = ?
@@ -130,8 +132,9 @@ try {
         }
     }else if ($criteria === 'username' && !empty($username)) {
         $query = "
-            SELECT p.PsgrID, p.UserID, p.Username, 
-                    u.FullName, u.ProfilePicture
+            SELECT p.PsgrID, p.UserID, p.Username, p.Role, p.FavPickUpLoc, p.FavDropOffLoc,
+                  u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                  u.EmailAddress, u.PhoneNo, u.BirthDate, u.Gender
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             WHERE UPPER(p.Username) LIKE UPPER(CONCAT('%', ?, '%'))
@@ -168,8 +171,9 @@ try {
         }
     }else if ($criteria === 'gender' && !empty($gender)) {
         $query = "
-            SELECT p.PsgrID, p.UserID, p.Username, 
-                   u.FullName, u.ProfilePicture
+            SELECT p.PsgrID, p.UserID, p.Username, p.Role, p.FavPickUpLoc, p.FavDropOffLoc,
+                  u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                  u.EmailAddress, u.PhoneNo, u.BirthDate, u.Gender
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             WHERE u.Gender = ?
@@ -206,8 +210,9 @@ try {
         }
     }else if ($criteria === 'fullName' && !empty($fullName)) {
         $query = "
-            SELECT p.PsgrID, p.UserID, p.Username, 
-                    u.FullName, u.ProfilePicture
+            SELECT p.PsgrID, p.UserID, p.Username, p.Role, p.FavPickUpLoc, p.FavDropOffLoc,
+                  u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                  u.EmailAddress, u.PhoneNo, u.BirthDate, u.Gender
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             WHERE u.FullName LIKE CONCAT('%', ?, '%')
@@ -244,8 +249,9 @@ try {
         }
     } else if ($criteria === 'status' && !empty($data['status'])) {
         $query = "
-            SELECT p.PsgrID, p.UserID, p.Username, 
-                   u.FullName, u.ProfilePicture
+            SELECT p.PsgrID, p.UserID, p.Username, p.Role, p.FavPickUpLoc, p.FavDropOffLoc,
+                  u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                  u.EmailAddress, u.PhoneNo, u.BirthDate, u.Gender
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             WHERE u.Status = ?
@@ -279,8 +285,9 @@ try {
         }
     } else if ($criteria === 'matricNo' && !empty($data['matricNo'])) {
         $query = "
-            SELECT p.PsgrID, p.UserID, p.Username,
-                   u.FullName, u.ProfilePicture
+            SELECT p.PsgrID, p.UserID, p.Username, p.Role, p.FavPickUpLoc, p.FavDropOffLoc,
+                  u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                  u.EmailAddress, u.PhoneNo, u.BirthDate, u.Gender
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             WHERE u.MatricNo LIKE UPPER(CONCAT('%', ?, '%'))
@@ -314,8 +321,9 @@ try {
         }
     } else if ($criteria === 'pickupLocation' && !empty($favPickUpLoc)) {
         $query = "
-            SELECT p.PsgrID, p.UserID, p.Username, 
-                    u.FullName, u.ProfilePicture
+            SELECT p.PsgrID, p.UserID, p.Username, p.Role, p.FavPickUpLoc, p.FavDropOffLoc,
+                  u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                  u.EmailAddress, u.PhoneNo, u.BirthDate, u.Gender
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             WHERE p.FavPickUpLoc LIKE CONCAT('%', ?, '%')
@@ -352,8 +360,9 @@ try {
         }
     }else if ($criteria === 'dropoffLocation' && !empty($favDropOffLoc)) {
         $query = "
-            SELECT p.PsgrID, p.UserID, p.Username, 
-                    u.FullName, u.ProfilePicture
+            SELECT p.PsgrID, p.UserID, p.Username, p.Role, p.FavPickUpLoc, p.FavDropOffLoc,
+                  u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                  u.EmailAddress, u.PhoneNo, u.BirthDate, u.Gender
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             WHERE p.FavDropOffLoc LIKE CONCAT('%', ?, '%')
@@ -390,8 +399,9 @@ try {
         }
     } else if ($criteria === 'all') {
         $query = "
-            SELECT p.PsgrID, p.UserID, p.Username, 
-                   u.FullName, u.ProfilePicture
+            SELECT p.PsgrID, p.UserID, p.Username, p.Role, p.FavPickUpLoc, p.FavDropOffLoc,
+                  u.FullName, u.ProfilePicture, u.Status, u.MatricNo,
+                  u.EmailAddress, u.PhoneNo, u.BirthDate, u.Gender
             FROM PASSENGER p
             INNER JOIN USER u ON p.UserID = u.UserID
             ORDER BY p.PsgrID ASC
