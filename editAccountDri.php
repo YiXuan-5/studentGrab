@@ -1,6 +1,7 @@
 <?php
 session_start();
 include 'dbConnection.php';
+include 'auditTrail.php';
 
 header('Content-Type: application/json');
 
@@ -17,6 +18,18 @@ try {
 
     if (isset($data['updateType'])) {
         if ($data['updateType'] === 'account') {
+            // Get old data before update
+            $stmt = $connMe->prepare("
+                SELECT u.EmailAddress, u.EmailSecCode, u.SecQues1, u.SecQues2, u.Status,
+                       d.Username, d.Password
+                FROM USER u
+                JOIN DRIVER d ON u.UserID = d.UserID
+                WHERE d.DriverID = ? AND u.UserID = ?
+            ");
+            $stmt->bind_param("ss", $data['driverId'], $data['userId']);
+            $stmt->execute();
+            $oldData = $stmt->get_result()->fetch_assoc();
+
             // Check if email exists (if changed)
             if ($data['email']) {
                 $stmt = $connMe->prepare("SELECT UserID FROM USER WHERE UPPER(EmailAddress) = UPPER(?) AND UserID != ?");
@@ -73,6 +86,44 @@ try {
                     if (!$stmt->execute()) {
                         throw new Exception("Failed to update user information");
                     }
+
+                    // Log audit trail for USER table update
+                    $oldUserData = [
+                        "EmailAddress" => $oldData['EmailAddress'],
+                        "EmailSecCode" => $oldData['EmailSecCode'],
+                        "SecQues1" => $oldData['SecQues1'],
+                        "SecQues2" => $oldData['SecQues2'],
+                        "Status" => $oldData['Status']
+                    ];
+                    
+                    $newUserData = [];
+                    $upperEmail = isset($data['email']) ? strtoupper($data['email']) : '';
+                    if (!empty($upperEmail) && $upperEmail !== $oldData['EmailAddress']) {
+                        $newUserData["EmailAddress"] = $upperEmail;
+                    }
+                    if (isset($data['securityCode']) && !empty($data['securityCode']) && $data['securityCode'] !== $oldData['EmailSecCode']) {
+                        $newUserData["EmailSecCode"] = $data['securityCode'];
+                    }
+                    if (isset($data['secQues1']) && !empty($data['secQues1']) && $data['secQues1'] !== $oldData['SecQues1']) {
+                        $newUserData["SecQues1"] = $data['secQues1'];
+                    }
+                    if (isset($data['secQues2']) && !empty($data['secQues2']) && $data['secQues2'] !== $oldData['SecQues2']) {
+                        $newUserData["SecQues2"] = $data['secQues2'];
+                    }
+                    if (isset($data['status']) && !empty($data['status']) && $data['status'] !== $oldData['Status']) {
+                        $newUserData["Status"] = $data['status'];
+                    }
+                    
+                    if (!empty($newUserData)) {
+                        logAuditTrail(
+                            "USER",
+                            $data['userId'],
+                            "UPDATE",
+                            $_SESSION['AdminID'],
+                            $oldUserData,
+                            $newUserData
+                        );
+                    }
                 }
             }
 
@@ -105,9 +156,51 @@ try {
                     if (!$stmt->execute()) {
                         throw new Exception("Failed to update driver information");
                     }
+
+                    // Log audit trail for driver account update
+                    $oldDriverData = [
+                        "Username" => $oldData['Username'],
+                        "Password" => $oldData['Password']
+                    ];
+                    
+                    $newDriverData = [];
+                    if (isset($data['username']) && !empty($data['username']) && $data['username'] !== $oldData['Username']) {
+                        $newDriverData["Username"] = $data['username'];
+                    }
+                    if (isset($data['password']) && !empty($data['password']) && $data['password'] !== $oldData['Password']) {
+                        $newDriverData["Password"] = $data['password'];
+                    }
+                    
+                    if (!empty($newDriverData)) {
+                        logAuditTrail(
+                            "DRIVER",
+                            $data['driverId'],
+                            "UPDATE",
+                            $_SESSION['AdminID'],
+                            $oldDriverData,
+                            $newDriverData
+                        );
+                    }
                 }
             }
         } else if ($data['updateType'] === 'personal') {
+            // Get old data before update
+            $stmt = $connMe->prepare("
+                SELECT u.FullName, u.PhoneNo, u.Gender, u.BirthDate, u.MatricNo,
+                       d.LicenseNo, d.LicenseExpDate
+                FROM USER u
+                JOIN DRIVER d ON u.UserID = d.UserID
+                WHERE d.DriverID = ? AND u.UserID = ?
+            ");
+            $stmt->bind_param("ss", $data['driverId'], $data['userId']);
+            $stmt->execute();
+            $oldData = $stmt->get_result()->fetch_assoc();
+
+            // Check if matric number is empty
+            if (empty($data['matricNo'])) {
+                throw new Exception("Matric number is required for drivers");
+            }
+
             // Update USER table
             $stmt = $connMe->prepare("
                 UPDATE USER u
@@ -118,12 +211,11 @@ try {
                     u.BirthDate = ?,
                     u.MatricNo = UPPER(?),
                     d.LicenseNo = ?,
-                    d.LicenseExpDate = ?,
-                    d.StickerExpDate = ?
+                    d.LicenseExpDate = ?
                 WHERE u.UserID = ? AND d.DriverID = ?
             ");
             
-            $stmt->bind_param("ssssssssss", 
+            $stmt->bind_param("sssssssss", 
                 $data['fullName'],
                 $data['phoneNo'],
                 $data['gender'],
@@ -131,20 +223,83 @@ try {
                 $data['matricNo'],
                 $data['licenseNo'],
                 $data['licenseExpDate'],
-                $data['stickerExpDate'],
                 $data['userId'],
                 $data['driverId']
             );
             
-            // Check if matric number is empty
-            if (empty($data['matricNo'])) {
-                throw new Exception("Matric number is required for drivers");
-            }
-            
             if (!$stmt->execute()) {
                 throw new Exception("Failed to update user information");
             }
+
+            // Log audit trail for USER table update
+            $oldUserData = [
+                "FullName" => $oldData['FullName'],
+                "PhoneNo" => $oldData['PhoneNo'],
+                "Gender" => $oldData['Gender'],
+                "BirthDate" => $oldData['BirthDate'],
+                "MatricNo" => $oldData['MatricNo']
+            ];
+            
+            $newUserData = [];
+            if (isset($data['fullName']) && !empty($data['fullName']) && strtoupper($data['fullName']) !== strtoupper($oldData['FullName'])) {
+                $newUserData["FullName"] = strtoupper($data['fullName']);
+            }
+            if (isset($data['phoneNo']) && !empty($data['phoneNo']) && $data['phoneNo'] !== $oldData['PhoneNo']) {
+                $newUserData["PhoneNo"] = $data['phoneNo'];
+            }
+            if (isset($data['gender']) && !empty($data['gender']) && $data['gender'] !== $oldData['Gender']) {
+                $newUserData["Gender"] = $data['gender'];
+            }
+            if (isset($data['birthDate']) && !empty($data['birthDate']) && $data['birthDate'] !== $oldData['BirthDate']) {
+                $newUserData["BirthDate"] = $data['birthDate'];
+            }
+            if (isset($data['matricNo']) && !empty($data['matricNo']) && strtoupper($data['matricNo']) !== $oldData['MatricNo']) {
+                $newUserData["MatricNo"] = strtoupper($data['matricNo']);
+            }
+            
+            if (!empty($newUserData)) {
+                logAuditTrail(
+                    "USER",
+                    $data['userId'],
+                    "UPDATE",
+                    $_SESSION['AdminID'],
+                    $oldUserData,
+                    $newUserData
+                );
+            }
+
+            // Log audit trail for driver license info update
+            $oldDriverData = [
+                "LicenseNo" => $oldData['LicenseNo'],
+                "LicenseExpDate" => $oldData['LicenseExpDate']
+            ];
+            
+            $newDriverData = [];
+            if (isset($data['licenseNo']) && !empty($data['licenseNo']) && $data['licenseNo'] !== $oldData['LicenseNo']) {
+                $newDriverData["LicenseNo"] = $data['licenseNo'];
+            }
+            if (isset($data['licenseExpDate']) && !empty($data['licenseExpDate']) && $data['licenseExpDate'] !== $oldData['LicenseExpDate']) {
+                $newDriverData["LicenseExpDate"] = $data['licenseExpDate'];
+            }
+            
+            if (!empty($newDriverData)) {
+                logAuditTrail(
+                    "DRIVER",
+                    $data['driverId'],
+                    "UPDATE",
+                    $_SESSION['AdminID'],
+                    $oldDriverData,
+                    $newDriverData
+                );
+            }
+
         } else if ($data['updateType'] === 'service') {
+            // Get old data before update
+            $stmt = $connMe->prepare("SELECT Availability, StickerExpDate FROM DRIVER WHERE DriverID = ?");
+            $stmt->bind_param("s", $data['driverId']);
+            $stmt->execute();
+            $oldData = $stmt->get_result()->fetch_assoc();
+
             // Update driver availability and sticker expiry date
             $stmt = $connMe->prepare("UPDATE DRIVER SET Availability = ?, StickerExpDate = ? WHERE DriverID = ? AND UserID = ?");
             $stmt->bind_param("ssss",
@@ -156,6 +311,31 @@ try {
             
             if (!$stmt->execute()) {
                 throw new Exception("Failed to update availability");
+            }
+
+            // Log audit trail for service info update
+            $oldDriverData = [
+                "Availability" => $oldData['Availability'],
+                "StickerExpDate" => $oldData['StickerExpDate']
+            ];
+            
+            $newDriverData = [];
+            if (isset($data['availability']) && !empty($data['availability']) && $data['availability'] !== $oldData['Availability']) {
+                $newDriverData["Availability"] = $data['availability'];
+            }
+            if (isset($data['stickerExpDate']) && !empty($data['stickerExpDate']) && $data['stickerExpDate'] !== $oldData['StickerExpDate']) {
+                $newDriverData["StickerExpDate"] = $data['stickerExpDate'];
+            }
+            
+            if (!empty($newDriverData)) {
+                logAuditTrail(
+                    "DRIVER",
+                    $data['driverId'],
+                    "UPDATE",
+                    $_SESSION['AdminID'],
+                    $oldDriverData,
+                    $newDriverData
+                );
             }
         }
     } else {
