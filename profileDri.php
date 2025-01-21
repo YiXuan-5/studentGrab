@@ -714,6 +714,29 @@ try {
             text-align: center;
             line-height: 1.2;
         }
+
+        /* ... existing styles ... */
+
+        .button-group {
+            text-align: center;
+        }
+
+        .logout-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 200px;
+            font-size: 16px;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .logout-btn:hover {
+            background-color: #cc0000;
+        }
     </style>
 </head>
 <body>
@@ -980,8 +1003,7 @@ try {
 
         <!-- Action Buttons -->
         <div class="button-group">
-            <button onclick="deleteAccount()" class="delete-account">Delete Account</button>
-            <button onclick="logout()" class="log-out">Log Out</button>
+            <button class="logout-btn" onclick="logout()">Log Out</button>
         </div>
     </div>
 
@@ -1673,34 +1695,6 @@ try {
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
                 window.location.href = 'logoutDri.php';
-            }
-        }
-
-        function deleteAccount() {
-            if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-                fetch('deleteAccountDri.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        userId: '<?php echo $_SESSION['UserID']; ?>',
-                       driverId: '<?php echo $_SESSION['DriverID']; ?>'
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        alert(data.message);
-                        window.location.href = 'loginDri.php';
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while deleting account');
-                });
             }
         }
 
