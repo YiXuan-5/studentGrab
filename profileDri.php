@@ -11,7 +11,7 @@ if (!isset($_SESSION['DriverID']) || !isset($_SESSION['UserID'])) {
 // Fetch user data
 $driverID = $_SESSION['DriverID'];
 $userID = $_SESSION['UserID'];
-
+/*
 //Notification icon
 $query = "SELECT COUNT(*) AS unread_count FROM riderequest WHERE driverID = ? AND notification_status = 'unread'";
 $stmt = $connAishah->prepare($query);
@@ -26,7 +26,7 @@ $result = $stmt->get_result();
 $row = $result->fetch_assoc();
 $unreadCount = $row['unread_count'] ?? 0; // Default to 0 if no result is found
 $stmt->close();
-
+*/
 try {
     // Get user and driver information
     $stmt = $connMe->prepare("
@@ -488,8 +488,9 @@ try {
 
         /* Action buttons */
         .button-group {
+            display: flex;
+            gap: 15px;
             margin-top: 20px;
-            text-align: center;
         }
 
         .button {
@@ -497,7 +498,7 @@ try {
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            width: calc(50% - 10px);
+            width: 50%;
             font-family: Arial, sans-serif;
         }
 
@@ -505,14 +506,20 @@ try {
             background-color: #4caf50;
             color: white;
             border: none;
-            flex: 1;
+        }
+
+        .save-btn:hover {
+            background-color: #388e3c;
         }
 
         .cancel-btn {
             background-color: white;
             color: #ff4444;
             border: 2px solid #ff4444;
-            flex: 1;
+        }
+
+        .cancel-btn:hover {
+            background-color: #ffebeb;
         }
 
         /* Update the button styles */
@@ -536,13 +543,12 @@ try {
             background-color: #ff4444;
             color: white;
             border: none;
-            padding: 12px 30px;
+            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 16px;
-            width: 200px;
-            margin: 0 auto;
-            display: block;
+            width: 50%;
+            transition: background-color 0.3s;
         }
 
         .log-out:hover {
@@ -708,37 +714,6 @@ try {
             text-align: center;
             line-height: 1.2;
         }
-        /* Modal button styles */
-        .modal-buttons {
-            display: flex;
-            flex-direction: row;
-            justify-content: space-between;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .button {
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            width: calc(50% - 10px);
-            font-family: Arial, sans-serif;
-        }
-
-        .save-btn {
-            background-color: #4caf50;
-            color: white;
-            border: none;
-            flex: 1;
-        }
-
-        .cancel-btn {
-            background-color: white;
-            color: #ff4444;
-            border: 2px solid #ff4444;
-            flex: 1;
-        }
     </style>
 </head>
 <body>
@@ -756,15 +731,7 @@ try {
             UTeM Peer Ride - Driver Portal
         </div>
         <div class="nav-items right">
-            <a href="http://192.168.214.55/workshop2/uprs/drivNoti.php?UserID=<?php echo $_SESSION['UserID']; ?>&DriverID=<?php echo $_SESSION['DriverID'];?>" class="nav-item">
-                        <!--<i class="fas fa-user"></i>-->
-                        <img src="https://img.icons8.com/?size=100&id=11668&format=png&color=FFFFFF" 
-                        alt="Notification Icon" style="width: 20px; height: 20px; margin-right: 5px; vertical-align: middle;">
-                        Notification
-                        <?php if ($unreadCount > 0): ?>
-                            <span class="badge"><?php echo $unreadCount; ?></span>
-                        <?php endif; ?>
-           </a>
+            
             <a href="profileDri.php" class="nav-item">
                 <i class="fas fa-user"></i> Profile
             </a>
@@ -1013,6 +980,7 @@ try {
 
         <!-- Action Buttons -->
         <div class="button-group">
+            <button onclick="deleteAccount()" class="delete-account">Delete Account</button>
             <button onclick="logout()" class="log-out">Log Out</button>
         </div>
     </div>
@@ -1151,7 +1119,7 @@ try {
                     </div>
                 </div>
 
-                <div class="modal-buttons">
+                <div class="button-group">
                     <button type="button" class="button cancel-btn" onclick="closeEditModal()">Cancel</button>
                     <button type="submit" class="button save-btn">Save Changes</button>
                 </div>
@@ -1216,11 +1184,11 @@ try {
 
                 <div class="form-group">
                     <label for="matricNo">Matric Number:</label>
-                    <input type="text" id="matricNo" name="matricNo" value="<?php echo $userData['MatricNo']; ?>" maxlength="10" autocomplete="off">
+                    <input type="text" id="matricNo" name="matricNo" value="<?php echo $userData['MatricNo']; ?>" maxlength="10">
                     <span id="matricNoError" class="error"></span>
                 </div>
 
-                <div class="modal-buttons">
+                <div class="button-group">
                     <button type="button" class="button cancel-btn" onclick="closePersonalModal()">Cancel</button>
                     <button type="submit" class="button save-btn">Save Changes</button>
                 </div>
@@ -1265,7 +1233,7 @@ try {
                            value="<?php echo date('Y-m-d', strtotime($userData['StickerExpDate'])); ?>" readonly class="readonly">
                 </div>
 
-                <div class="modal-buttons">
+                <div class="button-group">
                     <button type="button" class="button cancel-btn" onclick="closeModal('editServiceModal')">Cancel</button>
                     <button type="submit" class="button save-btn">Save Changes</button>
                 </div>
@@ -1320,7 +1288,7 @@ try {
                     </select>
                 </div>
 
-                <div class="modal-buttons">
+                <div class="button-group">
                     <button type="button" class="button cancel-btn" onclick="closeEditVehicleModal()">Cancel</button>
                     <button type="submit" class="button save-btn">Save Changes</button>
                 </div>
@@ -1361,7 +1329,7 @@ try {
                     </select>
                 </div>
 
-                <div class="modal-buttons">
+                <div class="button-group">
                     <button type="button" class="button cancel-btn" onclick="closeAddVehicleModal()">Cancel</button>
                     <button type="submit" class="button save-btn">Save</button>
                 </div>
@@ -1514,7 +1482,7 @@ try {
                 closeCropperModal();
             }, 'image/jpeg', 0.9);
         }
-        /*
+
         // Save cropped vehicle picture
         function saveVehiclePic() {
             if (!vehicleCropper) return;
@@ -1550,7 +1518,7 @@ try {
                 closeVehicleCropperModal();
             }, 'image/jpeg', 0.9);
         }
-        */
+
         // Vehicle management functions
         function addVehicle(formData) {
             fetch('vehicleDri.php', {
@@ -1707,7 +1675,7 @@ try {
                 window.location.href = 'logoutDri.php';
             }
         }
-        /*
+
         function deleteAccount() {
             if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
                 fetch('deleteAccountDri.php', {
@@ -1735,7 +1703,7 @@ try {
                 });
             }
         }
-        */
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Set up year manufactured dropdown for vehicle forms
@@ -1965,56 +1933,23 @@ try {
             }
 
             // Personal information form validation
-            document.getElementById('editPersonalForm').addEventListener('submit', async (e) => {
+            document.getElementById('editPersonalForm').addEventListener('submit', async function(e) {
                 e.preventDefault();
-
-                const fullName = document.getElementById('fullName').value.trim();
-                if (!fullName) {
-                    document.getElementById('fullNameError').textContent = 'Full name cannot be empty';
+                
+                // Validate all fields before submitting
+                const licenseNo = document.getElementById('licenseNo').value.trim();
+                const licenseError = document.getElementById('licenseError');
+                
+                if (!licenseNo) {
+                    licenseError.textContent = 'License number cannot be empty';
+                    return;
+                } else if (!/^\d{8}$/.test(licenseNo)) {
+                    licenseError.textContent = 'License number must be exactly 8 digits';
                     return;
                 }
-
-                // Check for any validation errors
-                const errors = document.querySelectorAll('.error');
-                for (let error of errors) {
-                    if (error.textContent) {
-                        alert('Please fix all errors before submitting');
-                        return;
-                    }
-                }
-
-                try {
-                    const response = await fetch('updateAccountDri.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            updateType: 'personal',
-                            fullName: fullName,
-                            licenseNo: document.getElementById('licenseNo').value.trim(),
-                            licenseExpDate: document.getElementById('licenseExpDate').value,
-                            phoneNo: document.getElementById('phoneNo').value.trim(),
-                            gender: document.querySelector('input[name="gender"]:checked').value === 'Male' ? 'M' : 'F',
-                            birthDate: document.getElementById('birthDate').value,
-                            secQues1: document.getElementById('secQues1').value,
-                            secQues2: document.getElementById('secQues2').value,
-                            userId: '<?php echo $_SESSION['UserID']; ?>',
-                            driverId: '<?php echo $_SESSION['DriverID']; ?>'
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (data.status === 'success') {
-                        alert('Personal information updated successfully');
-                        location.reload();
-                    } else {
-                        alert('Error: ' + data.message);
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('An error occurred while updating personal information');
-                }
+                
+                // If validation passes, save changes
+                await savePersonalChanges();
             });
 
             // Service information form validation
@@ -2056,23 +1991,19 @@ try {
                 const licenseNo = licenseNoInput.value.trim();
                 const currentLicenseNo = '<?php echo $userData['LicenseNo']; ?>';
                 const licenseError = document.getElementById('licenseError');
-                const saveButton = document.querySelector('#editPersonalForm .save-btn');
                 
                 if (licenseNo === currentLicenseNo) {
                     licenseError.textContent = '';
-                    saveButton.disabled = false;
                     return;
                 }
 
                 if (licenseNo.length === 0) {
                     licenseError.textContent = 'License number cannot be empty';
-                    saveButton.disabled = true;
                     return;
                 }
 
                 if (!/^\d{8}$/.test(licenseNo)) {
                     licenseError.textContent = 'License number must be exactly 8 digits';
-                    saveButton.disabled = true;
                     return;
                 }
 
@@ -2084,17 +2015,15 @@ try {
                         },
                         body: JSON.stringify({ 
                             licenseNo: licenseNo,
-                            currentUserId: '<?php echo $_SESSION['UserID']; ?>'
+                            userType: 'DRIVER'
                         })
                     });
                     const data = await response.json();
                     
                     if (data.status === 'exists') {
                         licenseError.textContent = 'License number already exists. Please check your input.';
-                        saveButton.disabled = true;
                     } else {
-                        licenseError.textContent = '';
-                        saveButton.disabled = false;
+                        licenseError.textContent = ''; // Clear error message if license number is valid
                     }
                 } catch (error) {
                     console.error('Error:', error);
@@ -2519,10 +2448,8 @@ try {
             // Get form values
             const fullName = document.getElementById('fullName').value.trim();
             const phoneNo = document.getElementById('phoneNo').value.trim();
-            // Convert 'Male'/'Female' to 'M'/'F'
             const genderValue = document.querySelector('input[name="gender"]:checked').value;
             const gender = genderValue === 'Male' ? 'M' : 'F';
-
             const birthDate = document.getElementById('birthDate').value;
             const licenseNo = document.getElementById('licenseNo').value.trim();
             const licenseExpDate = document.getElementById('licenseExpDate').value;
@@ -2538,34 +2465,14 @@ try {
             if (!/^01\d-\d{7,8}$/.test(phoneNo)) {
                 document.getElementById('phoneError').textContent = 'Invalid format. Example: 012-3456789';
                 hasErrors = true;
-            } else if (phoneNo !== '<?php echo $userData['PhoneNo']; ?>') {
-                // Check if phone number exists
-                try {
-                    const response = await fetch('validatePhoneNo.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ 
-                            phoneNo: phoneNo,
-                            userType: 'DRIVER',
-                            currentUserId: '<?php echo $_SESSION['UserID']; ?>'
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.status === 'exists') {
-                        document.getElementById('phoneError').textContent = 'Phone number already exists';
-                        hasErrors = true;
-                    }
-                } catch (error) {
-                    console.error('Phone validation error:', error);
-                    hasErrors = true;
-                }
             }
 
             // Validate license number
             if (!licenseNo) {
                 document.getElementById('licenseError').textContent = 'License number cannot be empty';
+                hasErrors = true;
+            } else if (!/^\d{8}$/.test(licenseNo)) {
+                document.getElementById('licenseError').textContent = 'License number must be exactly 8 digits';
                 hasErrors = true;
             }
 
@@ -2576,45 +2483,11 @@ try {
             } else if (!/^[BMD][01][0-9]{8}$/.test(matricNo)) {
                 document.getElementById('matricNoError').textContent = 'Invalid matric number format';
                 hasErrors = true;
-            } else if (matricNo !== '<?php echo $userData['MatricNo']; ?>') {
-                // Check if matric number exists (only if changed)
-                try {
-                    const response = await fetch('validateMatricNo.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ 
-                            matricNoDisplay: matricNo,
-                            currentUserId: '<?php echo $_SESSION['UserID']; ?>'
-                        })
-                    });
-                    const data = await response.json();
-                    if (data.status === 'exists') {
-                        document.getElementById('matricNoError').textContent = 'Matric number already exists';
-                        hasErrors = true;
-                    }
-                } catch (error) {
-                    console.error('Matric number validation error:', error);
-                    hasErrors = true;
-                }
             }
 
             if (hasErrors) {
-                return; // Stop if there are any errors
+                return false; // Stop if there are any errors
             }
-
-            // If no errors, proceed with update
-            const formData = {
-                updateType: 'personal',
-                fullName: fullName,
-                phoneNo: phoneNo,
-                gender: gender,
-                birthDate: birthDate,
-                licenseNo: licenseNo,
-                licenseExpDate: licenseExpDate,
-                matricNo: matricNo
-            };
 
             try {
                 const response = await fetch('updateAccountDri.php', {
@@ -2622,7 +2495,18 @@ try {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({
+                        updateType: 'personal',
+                        fullName: fullName,
+                        phoneNo: phoneNo,
+                        gender: gender,
+                        birthDate: birthDate,
+                        licenseNo: licenseNo,
+                        licenseExpDate: licenseExpDate,
+                        matricNo: matricNo,
+                        userId: '<?php echo $_SESSION['UserID']; ?>',
+                        driverId: '<?php echo $_SESSION['DriverID']; ?>'
+                    })
                 });
 
                 const data = await response.json();
@@ -2637,6 +2521,20 @@ try {
                 alert('An error occurred while updating personal information');
             }
         }
+
+        // Add license number validation on input
+        document.getElementById('licenseNo').addEventListener('input', function() {
+            const licenseNo = this.value.trim();
+            const licenseError = document.getElementById('licenseError');
+            
+            if (!licenseNo) {
+                licenseError.textContent = 'License number cannot be empty';
+            } else if (!/^\d{8}$/.test(licenseNo)) {
+                licenseError.textContent = 'License number must be exactly 8 digits';
+            } else {
+                licenseError.textContent = '';
+            }
+        });
     </script>
 </body>
 </html>

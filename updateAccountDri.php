@@ -102,7 +102,7 @@ try {
                 }
             }
         } else if ($data['updateType'] === 'personal') {
-            // Update USER table
+            // Update USER table with proper case for MatricNo
             $stmt = $connMe->prepare("
                 UPDATE USER u
                 JOIN DRIVER d ON u.UserID = d.UserID
@@ -116,12 +116,15 @@ try {
                 WHERE u.UserID = ? AND d.DriverID = ?
             ");
             
+            // Convert matric number to uppercase before binding
+            $matricNo = strtoupper($data['matricNo']);
+            
             $stmt->bind_param("sssssssss", 
                 $data['fullName'],
                 $data['phoneNo'],
                 $data['gender'],
                 $data['birthDate'],
-                $data['matricNo'],
+                $matricNo,
                 $data['licenseNo'],
                 $data['licenseExpDate'],
                 $_SESSION['UserID'],
