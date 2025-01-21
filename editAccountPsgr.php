@@ -1,6 +1,9 @@
 <?php
 session_start();
 include 'dbConnection.php';
+include 'auditTrail.php';
+
+header('Content-Type: application/json');
 
 // Check if admin is logged in
 if (!isset($_SESSION['AdminID'])) {
@@ -26,6 +29,18 @@ try {
 
     switch ($updateType) {
         case 'account':
+            // Get old data before update
+            $stmt = $connMe->prepare("
+                SELECT u.EmailAddress, u.EmailSecCode, u.SecQues1, u.SecQues2, u.Status,
+                       p.Username, p.Password
+                FROM USER u
+                JOIN PASSENGER p ON u.UserID = p.UserID
+                WHERE p.PsgrID = ? AND u.UserID = ?
+            ");
+            $stmt->bind_param("ss", $data['psgrId'], $data['userId']);
+            $stmt->execute();
+            $oldData = $stmt->get_result()->fetch_assoc();
+
             // Update USER table
             $updateUserSQL = "UPDATE USER SET ";
             $params = [];
@@ -70,6 +85,47 @@ try {
                 $stmt = $connMe->prepare($updateUserSQL);
                 $stmt->bind_param($types, ...$params);
                 $stmt->execute();
+
+                // Log audit trail for USER table update
+                $oldUserData = [
+                    "EmailAddress" => $oldData['EmailAddress'],
+                    "EmailSecCode" => $oldData['EmailSecCode'],
+                    "SecQues1" => $oldData['SecQues1'],
+                    "SecQues2" => $oldData['SecQues2'],
+                    "Status" => $oldData['Status']
+                ];
+                
+                $newUserData = [];
+                // Only include fields that actually changed
+                // Convert email to uppercase before comparison
+                $upperEmail = isset($data['email']) ? strtoupper($data['email']) : '';
+                if (!empty($upperEmail) && $upperEmail !== $oldData['EmailAddress']) {
+                    $newUserData["EmailAddress"] = $upperEmail;
+                }
+                if (isset($data['securityCode']) && !empty($data['securityCode']) && $data['securityCode'] !== $oldData['EmailSecCode']) {
+                    $newUserData["EmailSecCode"] = $data['securityCode'];
+                }
+                if (isset($data['secQues1']) && !empty($data['secQues1']) && $data['secQues1'] !== $oldData['SecQues1']) {
+                    $newUserData["SecQues1"] = $data['secQues1'];
+                }
+                if (isset($data['secQues2']) && !empty($data['secQues2']) && $data['secQues2'] !== $oldData['SecQues2']) {
+                    $newUserData["SecQues2"] = $data['secQues2'];
+                }
+                if (isset($data['status']) && !empty($data['status']) && $data['status'] !== $oldData['Status']) {
+                    $newUserData["Status"] = $data['status'];
+                }
+                
+                // Only log if there are actual changes
+                if (!empty($newUserData)) {
+                    logAuditTrail(
+                        "USER",
+                        $data['userId'],
+                        "UPDATE",
+                        $_SESSION['AdminID'],
+                        $oldUserData,
+                        $newUserData
+                    );
+                }
             }
 
             // Update PASSENGER table
@@ -98,10 +154,47 @@ try {
                 $stmt = $connMe->prepare($updatePsgrSQL);
                 $stmt->bind_param($types, ...$params);
                 $stmt->execute();
+
+                // Log audit trail for passenger account update
+                $oldPsgrData = [
+                    "Username" => $oldData['Username'],
+                    "Password" => $oldData['Password']
+                ];
+                
+                $newPsgrData = [];
+                if (isset($data['username']) && !empty($data['username']) && $data['username'] !== $oldData['Username']) {
+                    $newPsgrData["Username"] = $data['username'];
+                }
+                if (isset($data['password']) && !empty($data['password']) && $data['password'] !== $oldData['Password']) {
+                    $newPsgrData["Password"] = $data['password'];
+                }
+                
+                if (!empty($newPsgrData)) {
+                    logAuditTrail(
+                        "PASSENGER",
+                        $data['psgrId'],
+                        "UPDATE",
+                        $_SESSION['AdminID'],
+                        $oldPsgrData,
+                        $newPsgrData
+                    );
+                }
             }
             break;
 
         case 'personal':
+            // Get old data before update
+            $stmt = $connMe->prepare("
+                SELECT u.FullName, u.PhoneNo, u.Gender, u.BirthDate, u.MatricNo,
+                       p.Role
+                FROM USER u
+                JOIN PASSENGER p ON u.UserID = p.UserID
+                WHERE p.PsgrID = ? AND u.UserID = ?
+            ");
+            $stmt->bind_param("ss", $data['psgrId'], $data['userId']);
+            $stmt->execute();
+            $oldData = $stmt->get_result()->fetch_assoc();
+
             // Update USER table
             $stmt = $connMe->prepare("
                 UPDATE USER 
@@ -131,9 +224,68 @@ try {
                 $psgrID
             );
             $stmt->execute();
+
+            // Log audit trail for personal info update
+            $oldUserData = [
+                "FullName" => $oldData['FullName'],
+                "PhoneNo" => $oldData['PhoneNo'],
+                "Gender" => $oldData['Gender'],
+                "BirthDate" => $oldData['BirthDate'],
+                "MatricNo" => $oldData['MatricNo']
+            ];
+            
+            $newUserData = [];
+            if (isset($data['fullName']) && !empty($data['fullName']) && $data['fullName'] !== $oldData['FullName']) {
+                $newUserData["FullName"] = $data['fullName'];
+            }
+            if (isset($data['phoneNo']) && !empty($data['phoneNo']) && $data['phoneNo'] !== $oldData['PhoneNo']) {
+                $newUserData["PhoneNo"] = $data['phoneNo'];
+            }
+            if (isset($data['gender']) && !empty($data['gender']) && $data['gender'] !== $oldData['Gender']) {
+                $newUserData["Gender"] = $data['gender'];
+            }
+            if (isset($data['birthDate']) && !empty($data['birthDate']) && $data['birthDate'] !== $oldData['BirthDate']) {
+                $newUserData["BirthDate"] = $data['birthDate'];
+            }
+            if (isset($data['matricNo']) && !empty($data['matricNo']) && $data['matricNo'] !== $oldData['MatricNo']) {
+                $newUserData["MatricNo"] = $data['matricNo'];
+            }
+            
+            if (!empty($newUserData)) {
+                logAuditTrail(
+                    "USER",
+                    $data['userId'],
+                    "UPDATE",
+                    $_SESSION['AdminID'],
+                    $oldUserData,
+                    $newUserData
+                );
+            }
+
+            // Log audit trail for passenger role update
+            if (isset($data['role']) && !empty($data['role']) && $data['role'] !== $oldData['Role']) {
+                logAuditTrail(
+                    "PASSENGER",
+                    $data['psgrId'],
+                    "UPDATE",
+                    $_SESSION['AdminID'],
+                    ["Role" => $oldData['Role']],
+                    ["Role" => $data['role']]
+                );
+            }
             break;
 
         case 'preferences':
+            // Get old data before update
+            $stmt = $connMe->prepare("
+                SELECT FavPickUpLoc, FavDropOffLoc
+                FROM PASSENGER
+                WHERE PsgrID = ?
+            ");
+            $stmt->bind_param("s", $data['psgrId']);
+            $stmt->execute();
+            $oldData = $stmt->get_result()->fetch_assoc();
+
             $stmt = $connMe->prepare("
                 UPDATE PASSENGER 
                 SET FavPickUpLoc = ?, FavDropOffLoc = ?
@@ -145,6 +297,31 @@ try {
                 $psgrID
             );
             $stmt->execute();
+
+            // Log audit trail for preferences update
+            $oldPsgrData = [
+                "FavPickUpLoc" => $oldData['FavPickUpLoc'],
+                "FavDropOffLoc" => $oldData['FavDropOffLoc']
+            ];
+            
+            $newPsgrData = [];
+            if (isset($data['favPickUpLoc']) && !empty($data['favPickUpLoc']) && $data['favPickUpLoc'] !== $oldData['FavPickUpLoc']) {
+                $newPsgrData["FavPickUpLoc"] = $data['favPickUpLoc'];
+            }
+            if (isset($data['favDropOffLoc']) && !empty($data['favDropOffLoc']) && $data['favDropOffLoc'] !== $oldData['FavDropOffLoc']) {
+                $newPsgrData["FavDropOffLoc"] = $data['favDropOffLoc'];
+            }
+            
+            if (!empty($newPsgrData)) {
+                logAuditTrail(
+                    "PASSENGER",
+                    $data['psgrId'],
+                    "UPDATE",
+                    $_SESSION['AdminID'],
+                    $oldPsgrData,
+                    $newPsgrData
+                );
+            }
             break;
 
         default:
@@ -160,4 +337,6 @@ try {
     $connMe->rollback();
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
+
+$connMe->close();
 ?> 

@@ -2056,19 +2056,23 @@ try {
                 const licenseNo = licenseNoInput.value.trim();
                 const currentLicenseNo = '<?php echo $userData['LicenseNo']; ?>';
                 const licenseError = document.getElementById('licenseError');
+                const saveButton = document.querySelector('#editPersonalForm .save-btn');
                 
                 if (licenseNo === currentLicenseNo) {
                     licenseError.textContent = '';
+                    saveButton.disabled = false;
                     return;
                 }
 
                 if (licenseNo.length === 0) {
                     licenseError.textContent = 'License number cannot be empty';
+                    saveButton.disabled = true;
                     return;
                 }
 
                 if (!/^\d{8}$/.test(licenseNo)) {
                     licenseError.textContent = 'License number must be exactly 8 digits';
+                    saveButton.disabled = true;
                     return;
                 }
 
@@ -2087,8 +2091,10 @@ try {
                     
                     if (data.status === 'exists') {
                         licenseError.textContent = 'License number already exists. Please check your input.';
+                        saveButton.disabled = true;
                     } else {
-                        licenseError.textContent = ''; // Clear error message if license number is valid
+                        licenseError.textContent = '';
+                        saveButton.disabled = false;
                     }
                 } catch (error) {
                     console.error('Error:', error);
