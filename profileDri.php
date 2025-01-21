@@ -1514,7 +1514,7 @@ try {
                 closeCropperModal();
             }, 'image/jpeg', 0.9);
         }
-
+        /*
         // Save cropped vehicle picture
         function saveVehiclePic() {
             if (!vehicleCropper) return;
@@ -1550,7 +1550,7 @@ try {
                 closeVehicleCropperModal();
             }, 'image/jpeg', 0.9);
         }
-
+        */
         // Vehicle management functions
         function addVehicle(formData) {
             fetch('vehicleDri.php', {

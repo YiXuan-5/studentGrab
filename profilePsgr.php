@@ -11,7 +11,7 @@ if (!isset($_SESSION['PsgrID']) || !isset($_SESSION['UserID'])) {
 // Fetch user data
 $psgrID = $_SESSION['PsgrID'];
 $userID = $_SESSION['UserID'];
-/*
+
 //Notification icon
 // Prepared statement for security (to prevent SQL injection)
 $query = "SELECT COUNT(*) AS unread_count FROM riderequest WHERE psgrID = ? AND rstatus IN ('Accepted', 'Rejected') AND notification_rstatus = 'unread'";
@@ -24,7 +24,7 @@ $unreadCount = $row['unread_count'];
 
 // Close the statement
 $stmt->close();
-*/
+
 try {
     // Get user and passenger information
     $stmt = $connMe->prepare("
@@ -605,8 +605,15 @@ try {
 
         <!-- Right Side Items -->
         <div class="nav-items right">
-            
-            
+        <a href="http://192.168.214.55/workshop2/uprs/passNoti.php?UserID=<?php echo $_SESSION['UserID']; ?>&PsgrID=<?php echo $_SESSION['PsgrID']; ?>" class="nav-item">
+                    <!--<i class="fas fa-user"></i> -->
+                    <img src="https://img.icons8.com/?size=100&id=11668&format=png&color=FFFFFF" 
+                    alt="Notification Icon" style="width: 20px; height: 20px; margin-right: 5px; vertical-align: middle;">
+                    Notification
+                    <?php if ($unreadCount > 0): ?>
+                        <span class="badge"><?php echo $unreadCount; ?></span>
+                    <?php endif; ?>
+            </a>
 
             <a href="profilePsgr.php" class="nav-item">
                 <i class="fas fa-user"></i>
