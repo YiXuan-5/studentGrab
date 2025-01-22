@@ -419,6 +419,8 @@
                         <a href="viewPsgr.php">Passenger</a>
                         <a href="viewDri.php">Driver</a>
                         <a href="viewAdm.php">Admin</a>
+                        <a href="viewAuditLog.php">Audit Log</a>
+                        <a href="viewAuditTrail.php">Audit Trail</a>
                     </div>
                 </div>
             </div>

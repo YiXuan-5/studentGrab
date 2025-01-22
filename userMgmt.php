@@ -157,15 +157,6 @@ if (!isset($_SESSION['AdminID'])) {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        /* Center the single button in the second row */
-        .button-row:last-child {
-            justify-content: center;
-        }
-
-        .button-row:last-child .button-group {
-            margin: 0 140px; /* Add margin to center the single button */
-        }
-
         .view-button i {
             font-size: 20px;
             margin-bottom: 3px;
@@ -215,10 +206,6 @@ if (!isset($_SESSION['AdminID'])) {
             .button-row {
                 flex-direction: column;
                 align-items: center;
-            }
-
-            .button-row:last-child .button-group {
-                margin: 0; /* Remove margin on mobile */
             }
         }
     </style>
@@ -277,6 +264,22 @@ if (!isset($_SESSION['AdminID'])) {
                             <i class="fas fa-user-shield"></i>
                             <span>Admin</span>
                             <p class="button-desc">View admin details and accounts</p>
+                        </a>
+                    </div>
+                    <div class="button-group">
+                        <a href="viewAuditLog.php" class="view-button">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Audit Log</span>
+                            <p class="button-desc">View system audit logs and activities</p>
+                        </a>
+                    </div>
+                </div>
+                <div class="button-row">
+                    <div class="button-group">
+                        <a href="viewAuditTrail.php" class="view-button">
+                            <i class="fas fa-history"></i>
+                            <span>Audit Trail</span>
+                            <p class="button-desc">Track changes and modifications history</p>
                         </a>
                     </div>
                 </div>
