@@ -12,7 +12,6 @@ if (!isset($_SESSION['DriverID'])) {
 
 $data = json_decode(file_get_contents('php://input'), true);
 $driverID = $_SESSION['DriverID'];
-$userID = $_SESSION['UserID'];
 
 // Add this function to check and update driver availability
 function updateDriverAvailability($driverID, $connMe) {
@@ -57,8 +56,7 @@ try {
             throw new Exception("Failed to add vehicle");
         }
 
-        //Due to using trigger for generated VhcID, so we need to use select statement instead of insert_id
-        // Get the new vehicle ID after insert
+        //Get the new vehicle ID after insert
         $stmt = $connMe->prepare("SELECT VhcID FROM VEHICLE WHERE DriverID = ? ORDER BY VhcID DESC LIMIT 1");
         $stmt->bind_param("s", $driverID);
         $stmt->execute();
@@ -71,7 +69,7 @@ try {
             "VEHICLE",
             $newVhcId,
             "INSERT",
-            $userID,
+            $driverID,
             null,
             [
                 "DriverID" => $driverID,
@@ -126,22 +124,46 @@ try {
             throw new Exception("Failed to update vehicle information");
         }
 
-        // Log the UPDATE operation
-        logAuditTrail(
-            "VEHICLE",
-            $data['vhcId'],
-            "UPDATE",
-            $userID,
-            $oldVehicle,
-            [
-                "VehicleStatus" => $status,
-                "Model" => strtoupper($data['model']),
-                "PlateNo" => strtoupper($data['plateNo']),
-                "Color" => strtoupper($data['color']),
-                "AvailableSeat" => $data['availableSeat'],
-                "YearManufacture" => $data['yearManufacture']
-            ]
-        );
+        // Track only changed fields
+        $changedFields = [];
+        $newFields = [];
+        
+        if ($oldVehicle['VehicleStatus'] !== $status) {
+            $changedFields['VehicleStatus'] = $oldVehicle['VehicleStatus'];
+            $newFields['VehicleStatus'] = $status;
+        }
+        if (strtoupper($oldVehicle['Model']) !== strtoupper($data['model'])) {
+            $changedFields['Model'] = $oldVehicle['Model'];
+            $newFields['Model'] = strtoupper($data['model']);
+        }
+        if (strtoupper($oldVehicle['PlateNo']) !== strtoupper($data['plateNo'])) {
+            $changedFields['PlateNo'] = $oldVehicle['PlateNo'];
+            $newFields['PlateNo'] = strtoupper($data['plateNo']);
+        }
+        if (strtoupper($oldVehicle['Color']) !== strtoupper($data['color'])) {
+            $changedFields['Color'] = $oldVehicle['Color'];
+            $newFields['Color'] = strtoupper($data['color']);
+        }
+        if ($oldVehicle['AvailableSeat'] != $data['availableSeat']) {
+            $changedFields['AvailableSeat'] = $oldVehicle['AvailableSeat'];
+            $newFields['AvailableSeat'] = $data['availableSeat'];
+        }
+        if ($oldVehicle['YearManufacture'] != $data['yearManufacture']) {
+            $changedFields['YearManufacture'] = $oldVehicle['YearManufacture'];
+            $newFields['YearManufacture'] = $data['yearManufacture'];
+        }
+
+        // Log the UPDATE operation only if fields changed
+        if (!empty($changedFields)) {
+            logAuditTrail(
+                "VEHICLE",
+                $data['vhcId'],
+                "UPDATE",
+                $driverID,
+                $changedFields,
+                $newFields
+            );
+        }
 
         updateDriverAvailability($driverID, $connMe);
 
@@ -164,7 +186,7 @@ try {
             "VEHICLE",
             $data['vhcId'],
             "DELETE",
-            $userID,
+            $driverID,
             $deletedVehicle,
             null
         );

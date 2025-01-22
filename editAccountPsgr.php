@@ -87,31 +87,34 @@ try {
                 $stmt->execute();
 
                 // Log audit trail for USER table update
-                $oldUserData = [
-                    "EmailAddress" => $oldData['EmailAddress'],
-                    "EmailSecCode" => $oldData['EmailSecCode'],
-                    "SecQues1" => $oldData['SecQues1'],
-                    "SecQues2" => $oldData['SecQues2'],
-                    "Status" => $oldData['Status']
-                ];
-                
+                $oldUserData = [];
                 $newUserData = [];
+
                 // Only include fields that actually changed
                 // Convert email to uppercase before comparison
                 $upperEmail = isset($data['email']) ? strtoupper($data['email']) : '';
                 if (!empty($upperEmail) && $upperEmail !== $oldData['EmailAddress']) {
+                    $oldUserData["EmailAddress"] = $oldData['EmailAddress'];
                     $newUserData["EmailAddress"] = $upperEmail;
                 }
-                if (isset($data['securityCode']) && !empty($data['securityCode']) && $data['securityCode'] !== $oldData['EmailSecCode']) {
+                if (isset($data['securityCode']) && !empty($data['securityCode']) && 
+                    $data['securityCode'] !== $oldData['EmailSecCode']) {
+                    $oldUserData["EmailSecCode"] = $oldData['EmailSecCode'];
                     $newUserData["EmailSecCode"] = $data['securityCode'];
                 }
-                if (isset($data['secQues1']) && !empty($data['secQues1']) && $data['secQues1'] !== $oldData['SecQues1']) {
+                if (isset($data['secQues1']) && !empty($data['secQues1']) && 
+                    $data['secQues1'] !== $oldData['SecQues1']) {
+                    $oldUserData["SecQues1"] = $oldData['SecQues1'];
                     $newUserData["SecQues1"] = $data['secQues1'];
                 }
-                if (isset($data['secQues2']) && !empty($data['secQues2']) && $data['secQues2'] !== $oldData['SecQues2']) {
+                if (isset($data['secQues2']) && !empty($data['secQues2']) && 
+                    $data['secQues2'] !== $oldData['SecQues2']) {
+                    $oldUserData["SecQues2"] = $oldData['SecQues2'];
                     $newUserData["SecQues2"] = $data['secQues2'];
                 }
-                if (isset($data['status']) && !empty($data['status']) && $data['status'] !== $oldData['Status']) {
+                if (isset($data['status']) && !empty($data['status']) && 
+                    $data['status'] !== $oldData['Status']) {
+                    $oldUserData["Status"] = $oldData['Status'];
                     $newUserData["Status"] = $data['status'];
                 }
                 
@@ -156,16 +159,17 @@ try {
                 $stmt->execute();
 
                 // Log audit trail for passenger account update
-                $oldPsgrData = [
-                    "Username" => $oldData['Username'],
-                    "Password" => $oldData['Password']
-                ];
-                
+                $oldPsgrData = [];
                 $newPsgrData = [];
-                if (isset($data['username']) && !empty($data['username']) && $data['username'] !== $oldData['Username']) {
+
+                if (isset($data['username']) && !empty($data['username']) && 
+                    $data['username'] !== $oldData['Username']) {
+                    $oldPsgrData["Username"] = $oldData['Username'];
                     $newPsgrData["Username"] = $data['username'];
                 }
-                if (isset($data['password']) && !empty($data['password']) && $data['password'] !== $oldData['Password']) {
+                if (isset($data['password']) && !empty($data['password']) && 
+                    $data['password'] !== $oldData['Password']) {
+                    $oldPsgrData["Password"] = $oldData['Password'];
                     $newPsgrData["Password"] = $data['password'];
                 }
                 
@@ -226,28 +230,31 @@ try {
             $stmt->execute();
 
             // Log audit trail for personal info update
-            $oldUserData = [
-                "FullName" => $oldData['FullName'],
-                "PhoneNo" => $oldData['PhoneNo'],
-                "Gender" => $oldData['Gender'],
-                "BirthDate" => $oldData['BirthDate'],
-                "MatricNo" => $oldData['MatricNo']
-            ];
-            
+            $oldUserData = [];
             $newUserData = [];
-            if (isset($data['fullName']) && !empty($data['fullName']) && $data['fullName'] !== $oldData['FullName']) {
-                $newUserData["FullName"] = $data['fullName'];
+
+            if (isset($data['fullName']) && !empty($data['fullName']) && 
+                strtoupper($data['fullName']) !== $oldData['FullName']) {
+                $oldUserData["FullName"] = $oldData['FullName'];
+                $newUserData["FullName"] = strtoupper($data['fullName']);
             }
-            if (isset($data['phoneNo']) && !empty($data['phoneNo']) && $data['phoneNo'] !== $oldData['PhoneNo']) {
+            if (isset($data['phoneNo']) && !empty($data['phoneNo']) && 
+                $data['phoneNo'] !== $oldData['PhoneNo']) {
+                $oldUserData["PhoneNo"] = $oldData['PhoneNo'];
                 $newUserData["PhoneNo"] = $data['phoneNo'];
             }
-            if (isset($data['gender']) && !empty($data['gender']) && $data['gender'] !== $oldData['Gender']) {
+            if (isset($data['gender']) && !empty($data['gender']) && 
+                $data['gender'] !== $oldData['Gender']) {
+                $oldUserData["Gender"] = $oldData['Gender'];
                 $newUserData["Gender"] = $data['gender'];
             }
-            if (isset($data['birthDate']) && !empty($data['birthDate']) && $data['birthDate'] !== $oldData['BirthDate']) {
+            if (isset($data['birthDate']) && !empty($data['birthDate']) && 
+                $data['birthDate'] !== $oldData['BirthDate']) {
+                $oldUserData["BirthDate"] = $oldData['BirthDate'];
                 $newUserData["BirthDate"] = $data['birthDate'];
             }
-            if (isset($data['matricNo']) && !empty($data['matricNo']) && $data['matricNo'] !== $oldData['MatricNo']) {
+            if (isset($data['matricNo']) && $data['matricNo'] !== $oldData['MatricNo']) {
+                $oldUserData["MatricNo"] = $oldData['MatricNo'];
                 $newUserData["MatricNo"] = $data['matricNo'];
             }
             
@@ -299,17 +306,18 @@ try {
             $stmt->execute();
 
             // Log audit trail for preferences update
-            $oldPsgrData = [
-                "FavPickUpLoc" => $oldData['FavPickUpLoc'],
-                "FavDropOffLoc" => $oldData['FavDropOffLoc']
-            ];
-            
+            $oldPsgrData = [];
             $newPsgrData = [];
-            if (isset($data['favPickUpLoc']) && !empty($data['favPickUpLoc']) && $data['favPickUpLoc'] !== $oldData['FavPickUpLoc']) {
-                $newPsgrData["FavPickUpLoc"] = $data['favPickUpLoc'];
+
+            if (isset($data['favPickUpLoc']) && !empty($data['favPickUpLoc']) && 
+                strtoupper($data['favPickUpLoc']) !== $oldData['FavPickUpLoc']) {
+                $oldPsgrData["FavPickUpLoc"] = $oldData['FavPickUpLoc'];
+                $newPsgrData["FavPickUpLoc"] = strtoupper($data['favPickUpLoc']);
             }
-            if (isset($data['favDropOffLoc']) && !empty($data['favDropOffLoc']) && $data['favDropOffLoc'] !== $oldData['FavDropOffLoc']) {
-                $newPsgrData["FavDropOffLoc"] = $data['favDropOffLoc'];
+            if (isset($data['favDropOffLoc']) && !empty($data['favDropOffLoc']) && 
+                strtoupper($data['favDropOffLoc']) !== $oldData['FavDropOffLoc']) {
+                $oldPsgrData["FavDropOffLoc"] = $oldData['FavDropOffLoc'];
+                $newPsgrData["FavDropOffLoc"] = strtoupper($data['favDropOffLoc']);
             }
             
             if (!empty($newPsgrData)) {
