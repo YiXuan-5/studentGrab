@@ -1,5 +1,6 @@
 <?php
 include 'dbConnection.php';
+include 'auditTrail.php';
 
 header('Content-Type: application/json');
 
@@ -97,6 +98,12 @@ try {
         // Get existing USER ID
         $userId = getUserIDByEmail($connMe, $formData['emailChecked']);
 
+        // Get current user data before update
+        $stmt = $connMe->prepare("SELECT UserType FROM USER WHERE UserID = ?");
+        $stmt->bind_param("s", $userId);
+        $stmt->execute();
+        $oldUserData = $stmt->get_result()->fetch_assoc();
+
         // Update UserType to include PASSENGER role
         $updateTypeStmt = $connMe->prepare("UPDATE USER SET UserType = CONCAT(UserType, ' PASSENGER') 
                                           WHERE UserID = ? AND UserType NOT LIKE '%PASSENGER%'");
@@ -143,6 +150,48 @@ try {
 
     // Get the PsgrID after successful insertion
     $psgrId = getPsgrIDByUserID($connMe, $userId);
+
+    // Now log the new user creation with PsgrID (for new users)
+    if (!$isExistingUser) {
+        $newUserData = [
+            'FullName' => $fullName,
+            'EmailAddress' => strtoupper($emailChecked),
+            'EmailSecCode' => $emailSecCode,
+            'PhoneNo' => $phoneNo,
+            'UserType' => strtoupper($userType),
+            'BirthDate' => $birthDate,
+            'Gender' => $gender,
+            'SecQues1' => $secQues1,
+            'SecQues2' => $secQues2
+        ];
+        if ($matricNoDisplay) {
+            $newUserData['MatricNo'] = $matricNoDisplay;
+        }
+        logAuditTrail("USER", $userId, "INSERT", $psgrId, null, $newUserData);
+    }
+    
+    // For existing users, update the UserType audit trail with PsgrID
+    if ($isExistingUser && !str_contains($oldUserData['UserType'], 'PASSENGER')) {
+        logAuditTrail(
+            "USER",
+            $userId,
+            "UPDATE",
+            $psgrId,
+            ['UserType' => $oldUserData['UserType']],
+            ['UserType' => $oldUserData['UserType'] . ' PASSENGER']
+        );
+    }
+
+    // Log the new passenger creation
+    $newPassengerData = [
+        'UserID' => $userId,
+        'Username' => $formData['username'],
+        'Password' => $formData['password'],
+        'FavPickUpLoc' => strtoupper($formData['favPickUpLoc']),
+        'FavDropOffLoc' => strtoupper($formData['favDropOffLoc']),
+        'Role' => strtoupper($formData['role'])
+    ];
+    logAuditTrail("PASSENGER", $psgrId, "INSERT", $psgrId, null, $newPassengerData);
 
     // If we got here, everything worked, so commit the transaction
     $connMe->commit();
