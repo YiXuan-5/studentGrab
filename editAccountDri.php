@@ -88,29 +88,32 @@ try {
                     }
 
                     // Log audit trail for USER table update
-                    $oldUserData = [
-                        "EmailAddress" => $oldData['EmailAddress'],
-                        "EmailSecCode" => $oldData['EmailSecCode'],
-                        "SecQues1" => $oldData['SecQues1'],
-                        "SecQues2" => $oldData['SecQues2'],
-                        "Status" => $oldData['Status']
-                    ];
-                    
+                    $oldUserData = [];
                     $newUserData = [];
+                    
                     $upperEmail = isset($data['email']) ? strtoupper($data['email']) : '';
                     if (!empty($upperEmail) && $upperEmail !== $oldData['EmailAddress']) {
+                        $oldUserData["EmailAddress"] = $oldData['EmailAddress'];
                         $newUserData["EmailAddress"] = $upperEmail;
                     }
-                    if (isset($data['securityCode']) && !empty($data['securityCode']) && $data['securityCode'] !== $oldData['EmailSecCode']) {
+                    if (isset($data['securityCode']) && !empty($data['securityCode']) && 
+                        $data['securityCode'] !== $oldData['EmailSecCode']) {
+                        $oldUserData["EmailSecCode"] = $oldData['EmailSecCode'];
                         $newUserData["EmailSecCode"] = $data['securityCode'];
                     }
-                    if (isset($data['secQues1']) && !empty($data['secQues1']) && $data['secQues1'] !== $oldData['SecQues1']) {
+                    if (isset($data['secQues1']) && !empty($data['secQues1']) && 
+                        $data['secQues1'] !== $oldData['SecQues1']) {
+                        $oldUserData["SecQues1"] = $oldData['SecQues1'];
                         $newUserData["SecQues1"] = $data['secQues1'];
                     }
-                    if (isset($data['secQues2']) && !empty($data['secQues2']) && $data['secQues2'] !== $oldData['SecQues2']) {
+                    if (isset($data['secQues2']) && !empty($data['secQues2']) && 
+                        $data['secQues2'] !== $oldData['SecQues2']) {
+                        $oldUserData["SecQues2"] = $oldData['SecQues2'];
                         $newUserData["SecQues2"] = $data['secQues2'];
                     }
-                    if (isset($data['status']) && !empty($data['status']) && $data['status'] !== $oldData['Status']) {
+                    if (isset($data['status']) && !empty($data['status']) && 
+                        $data['status'] !== $oldData['Status']) {
+                        $oldUserData["Status"] = $oldData['Status'];
                         $newUserData["Status"] = $data['status'];
                     }
                     
@@ -158,16 +161,16 @@ try {
                     }
 
                     // Log audit trail for driver account update
-                    $oldDriverData = [
-                        "Username" => $oldData['Username'],
-                        "Password" => $oldData['Password']
-                    ];
-                    
+                    $oldDriverData = [];
                     $newDriverData = [];
-                    if (isset($data['username']) && !empty($data['username']) && $data['username'] !== $oldData['Username']) {
+                    if (isset($data['username']) && !empty($data['username']) && 
+                        $data['username'] !== $oldData['Username']) {
+                        $oldDriverData["Username"] = $oldData['Username'];
                         $newDriverData["Username"] = $data['username'];
                     }
-                    if (isset($data['password']) && !empty($data['password']) && $data['password'] !== $oldData['Password']) {
+                    if (isset($data['password']) && !empty($data['password']) && 
+                        $data['password'] !== $oldData['Password']) {
+                        $oldDriverData["Password"] = $oldData['Password'];
                         $newDriverData["Password"] = $data['password'];
                     }
                     
@@ -232,28 +235,32 @@ try {
             }
 
             // Log audit trail for USER table update
-            $oldUserData = [
-                "FullName" => $oldData['FullName'],
-                "PhoneNo" => $oldData['PhoneNo'],
-                "Gender" => $oldData['Gender'],
-                "BirthDate" => $oldData['BirthDate'],
-                "MatricNo" => $oldData['MatricNo']
-            ];
-            
+            $oldUserData = [];
             $newUserData = [];
-            if (isset($data['fullName']) && !empty($data['fullName']) && strtoupper($data['fullName']) !== strtoupper($oldData['FullName'])) {
+            
+            if (isset($data['fullName']) && !empty($data['fullName']) && 
+                strtoupper($data['fullName']) !== $oldData['FullName']) {
+                $oldUserData["FullName"] = $oldData['FullName'];
                 $newUserData["FullName"] = strtoupper($data['fullName']);
             }
-            if (isset($data['phoneNo']) && !empty($data['phoneNo']) && $data['phoneNo'] !== $oldData['PhoneNo']) {
+            if (isset($data['phoneNo']) && !empty($data['phoneNo']) && 
+                $data['phoneNo'] !== $oldData['PhoneNo']) {
+                $oldUserData["PhoneNo"] = $oldData['PhoneNo'];
                 $newUserData["PhoneNo"] = $data['phoneNo'];
             }
-            if (isset($data['gender']) && !empty($data['gender']) && $data['gender'] !== $oldData['Gender']) {
+            if (isset($data['gender']) && !empty($data['gender']) && 
+                $data['gender'] !== $oldData['Gender']) {
+                $oldUserData["Gender"] = $oldData['Gender'];
                 $newUserData["Gender"] = $data['gender'];
             }
-            if (isset($data['birthDate']) && !empty($data['birthDate']) && $data['birthDate'] !== $oldData['BirthDate']) {
+            if (isset($data['birthDate']) && !empty($data['birthDate']) && 
+                $data['birthDate'] !== $oldData['BirthDate']) {
+                $oldUserData["BirthDate"] = $oldData['BirthDate'];
                 $newUserData["BirthDate"] = $data['birthDate'];
             }
-            if (isset($data['matricNo']) && !empty($data['matricNo']) && strtoupper($data['matricNo']) !== $oldData['MatricNo']) {
+            if (isset($data['matricNo']) && !empty($data['matricNo']) && 
+                strtoupper($data['matricNo']) !== $oldData['MatricNo']) {
+                $oldUserData["MatricNo"] = $oldData['MatricNo'];
                 $newUserData["MatricNo"] = strtoupper($data['matricNo']);
             }
             
@@ -269,16 +276,17 @@ try {
             }
 
             // Log audit trail for driver license info update
-            $oldDriverData = [
-                "LicenseNo" => $oldData['LicenseNo'],
-                "LicenseExpDate" => $oldData['LicenseExpDate']
-            ];
-            
+            $oldDriverData = [];
             $newDriverData = [];
-            if (isset($data['licenseNo']) && !empty($data['licenseNo']) && $data['licenseNo'] !== $oldData['LicenseNo']) {
+            
+            if (isset($data['licenseNo']) && !empty($data['licenseNo']) && 
+                $data['licenseNo'] !== $oldData['LicenseNo']) {
+                $oldDriverData["LicenseNo"] = $oldData['LicenseNo'];
                 $newDriverData["LicenseNo"] = $data['licenseNo'];
             }
-            if (isset($data['licenseExpDate']) && !empty($data['licenseExpDate']) && $data['licenseExpDate'] !== $oldData['LicenseExpDate']) {
+            if (isset($data['licenseExpDate']) && !empty($data['licenseExpDate']) && 
+                $data['licenseExpDate'] !== $oldData['LicenseExpDate']) {
+                $oldDriverData["LicenseExpDate"] = $oldData['LicenseExpDate'];
                 $newDriverData["LicenseExpDate"] = $data['licenseExpDate'];
             }
             
@@ -314,16 +322,17 @@ try {
             }
 
             // Log audit trail for service info update
-            $oldDriverData = [
-                "Availability" => $oldData['Availability'],
-                "StickerExpDate" => $oldData['StickerExpDate']
-            ];
-            
+            $oldDriverData = [];
             $newDriverData = [];
-            if (isset($data['availability']) && !empty($data['availability']) && $data['availability'] !== $oldData['Availability']) {
+            
+            if (isset($data['availability']) && !empty($data['availability']) && 
+                $data['availability'] !== $oldData['Availability']) {
+                $oldDriverData["Availability"] = $oldData['Availability'];
                 $newDriverData["Availability"] = $data['availability'];
             }
-            if (isset($data['stickerExpDate']) && !empty($data['stickerExpDate']) && $data['stickerExpDate'] !== $oldData['StickerExpDate']) {
+            if (isset($data['stickerExpDate']) && !empty($data['stickerExpDate']) && 
+                $data['stickerExpDate'] !== $oldData['StickerExpDate']) {
+                $oldDriverData["StickerExpDate"] = $oldData['StickerExpDate'];
                 $newDriverData["StickerExpDate"] = $data['stickerExpDate'];
             }
             
