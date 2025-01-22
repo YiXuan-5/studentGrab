@@ -1,5 +1,6 @@
 <?php
 include 'dbConnection.php';
+include 'auditTrail.php';
 
 header('Content-Type: application/json');
 
@@ -103,6 +104,12 @@ try {
         // Get existing USER ID
         $userID = getUserIDByEmail($connMe, $formData['emailChecked']);
 
+        // Get current user data before update
+        $stmt = $connMe->prepare("SELECT UserType FROM USER WHERE UserID = ?");
+        $stmt->bind_param("s", $userID);
+        $stmt->execute();
+        $oldUserData = $stmt->get_result()->fetch_assoc();
+
         // Update UserType to include Admin role
         $updateTypeStmt = $connMe->prepare("UPDATE USER SET UserType = CONCAT(UserType, ' ADMIN') 
                                           WHERE UserID = ? AND UserType NOT LIKE '%ADMIN%'");
@@ -148,6 +155,44 @@ try {
 
     // Get the AdminID after successful insertion
     $adminID = getAdmIDByUserID($connMe, $userID);
+
+    // Now log the new user creation with AdminID (for new users)
+    if (!$isExistingUser) {
+        $newUserData = [
+            'FullName' => strtoupper($formData['fullName']),
+            'EmailAddress' => strtoupper($formData['emailChecked']),
+            'EmailSecCode' => $formData['emailSecCode'],
+            'PhoneNo' => $formData['phoneChecked'],
+            'UserType' => strtoupper($formData['userType']),
+            'BirthDate' => $formData['birthDate'],
+            'Gender' => $gender,
+            'SecQues1' => $formData['secQues1'],
+            'SecQues2' => $formData['secQues2']
+        ];
+        logAuditTrail("USER", $userID, "INSERT", $adminID, null, $newUserData);
+    }
+    
+    // For existing users, update the UserType audit trail with AdminID
+    if ($isExistingUser && !str_contains($oldUserData['UserType'], 'ADMIN')) {
+        logAuditTrail(
+            "USER",
+            $userID,
+            "UPDATE",
+            $adminID,
+            ['UserType' => $oldUserData['UserType']],
+            ['UserType' => $oldUserData['UserType'] . ' ADMIN']
+        );
+    }
+
+    // Log the new admin creation
+    $newAdminData = [
+        'UserID' => $userID,
+        'Username' => $formData['username'],
+        'Password' => $formData['password'],
+        'Department' => strtoupper($formData['department']),
+        'Position' => strtoupper($formData['position'])
+    ];
+    logAuditTrail("ADMIN", $adminID, "INSERT", $adminID, null, $newAdminData);
 
     // If we got here, everything worked, so commit the transaction
     $connMe->commit();
