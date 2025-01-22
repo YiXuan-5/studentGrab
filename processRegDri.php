@@ -1,5 +1,6 @@
 <?php
 include 'dbConnection.php';
+include 'auditTrail.php';
 
 header('Content-Type: application/json');
 
@@ -134,6 +135,12 @@ try {
         // Get existing USER ID
         $userID = getUserIDByEmail($connMe, $formData['emailChecked']);
 
+        // Get current user data before update
+        $stmt = $connMe->prepare("SELECT UserType FROM USER WHERE UserID = ?");
+        $stmt->bind_param("s", $userID);
+        $stmt->execute();
+        $oldUserData = $stmt->get_result()->fetch_assoc();
+
         // Update UserType to include DRIVER role
         $updateTypeStmt = $connMe->prepare("UPDATE USER SET UserType = CONCAT(UserType, ' DRIVER') 
                                           WHERE UserID = ? AND UserType NOT LIKE '%DRIVER%'");
@@ -188,6 +195,46 @@ try {
     // Get the DriverID after successful insertion
     $driverID = getDriverIDByUserID($connMe, $userID);
 
+    // Now log the new user creation with DriverID (for new users)
+    if (!$isExistingUser) {
+        $newUserData = [
+            'FullName' => strtoupper($formData['fullName']),
+            'EmailAddress' => strtoupper($formData['emailChecked']),
+            'EmailSecCode' => $formData['emailSecCode'],
+            'PhoneNo' => $formData['phoneChecked'],
+            'UserType' => strtoupper($formData['userType']),
+            'BirthDate' => $formData['birthDate'],
+            'Gender' => $gender,
+            'SecQues1' => $formData['secQues1'],
+            'SecQues2' => $formData['secQues2'],
+            'MatricNo' => strtoupper($formData['matricNoDisplay'])
+        ];
+        logAuditTrail("USER", $userID, "INSERT", $driverID, null, $newUserData);
+    }
+    
+    // For existing users, update the UserType audit trail with DriverID
+    if ($isExistingUser && !str_contains($oldUserData['UserType'], 'DRIVER')) {
+        logAuditTrail(
+            "USER",
+            $userID,
+            "UPDATE",
+            $driverID,
+            ['UserType' => $oldUserData['UserType']],
+            ['UserType' => $oldUserData['UserType'] . ' DRIVER']
+        );
+    }
+
+    // Log the new driver creation
+    $newDriverData = [
+        'UserID' => $userID,
+        'Username' => $formData['username'],
+        'Password' => $formData['password'],
+        'LicenseNo' => $formData['licenseNo'],
+        'LicenseExpDate' => $formData['licenseExpDate'],
+        'StickerExpDate' => $formData['stickerExpDate']
+    ];
+    logAuditTrail("DRIVER", $driverID, "INSERT", $driverID, null, $newDriverData);
+
     // Insert into VEHICLE table
     $vehicleStmt = $connMe->prepare("INSERT INTO VEHICLE (DriverID, Model, PlateNo, Color, AvailableSeat, YearManufacture) VALUES (?, UPPER(?), UPPER(?), UPPER(?), ?, ?)");
     
@@ -213,6 +260,18 @@ try {
     // Get the VehicleID and EHailing License after successful insertion
     $vehicleID = getVehicleIDByDriverID($connMe, $driverID);
     $ehailingLicense = getEHailingLicenseByDriverID($connMe, $driverID);
+
+    // Log the new vehicle creation
+    $newVehicleData = [
+        'DriverID' => $driverID,
+        'Model' => strtoupper($formData['model']),
+        'PlateNo' => strtoupper($formData['plateNo']),
+        'Color' => strtoupper($formData['color']),
+        'AvailableSeat' => $formData['availableSeat'],
+        'YearManufacture' => $formData['yearManufacture'],
+        'VehicleStatus' => 'ACTIVE'
+    ];
+    logAuditTrail("VEHICLE", $vehicleID, "INSERT", $driverID, null, $newVehicleData);
 
     // If we got here, everything worked, so commit the transaction
     $connMe->commit();
