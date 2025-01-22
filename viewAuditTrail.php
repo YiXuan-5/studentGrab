@@ -8,10 +8,29 @@ if (!isset($_SESSION['AdminID'])) {
     exit();
 }
 
-// Fetch unique UserIDs for the dropdown
-$userIDs = [];
+// Fetch unique values for dropdowns
 try {
-    $stmt = $connMe->prepare("SELECT DISTINCT UserID FROM AUDIT_LOG ORDER BY UserID ASC");
+    // Trail IDs
+    $trailIDs = [];
+    $stmt = $connMe->prepare("SELECT DISTINCT TrailID FROM AUDIT_TRAIL ORDER BY TrailID ASC");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $trailIDs[] = $row['TrailID'];
+    }
+
+    // Table Names
+    $tableNames = [];
+    $stmt = $connMe->prepare("SELECT DISTINCT TableName FROM AUDIT_TRAIL ORDER BY TableName ASC");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $tableNames[] = $row['TableName'];
+    }
+
+    // User IDs
+    $userIDs = [];
+    $stmt = $connMe->prepare("SELECT DISTINCT UserID FROM AUDIT_TRAIL WHERE UserID IS NOT NULL ORDER BY UserID ASC");
     $stmt->execute();
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
@@ -28,13 +47,10 @@ try {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View Audit Log</title>
+    <title>View Audit Trail</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/fontawesome.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/solid.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
-        /* Copy styles from viewAdm.php */
         * {
             margin: 0;
             padding: 0;
@@ -117,23 +133,6 @@ try {
             font-size: 16px;
         }
 
-        .radio-group {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-
-        .radio-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .radio-option input[type="radio"] {
-            margin: 0;
-        }
-
         .button {
             background-color: #4caf50;
             color: white;
@@ -176,29 +175,17 @@ try {
             background-color: #f5f5f5;
         }
 
-        #noResults {
-            text-align: center;
+        .no-results {
+            color: #ff0000;
             padding: 20px;
+            text-align: left;
             font-size: 16px;
-            color: #666;
-            display: none; /* Initially hidden */
         }
 
-        #totalLogs {
+        #totalTrails {
             margin: 20px 0;
             font-size: 16px;
             color: #000;
-        }
-
-        @media print {
-            .result-table th { 
-                background-color: #4caf50 !important;
-                color: white !important;
-                -webkit-print-color-adjust: exact;
-            }
-            @page {
-                size: landscape;
-            }
         }
 
         .generate-report-btn {
@@ -249,13 +236,6 @@ try {
             display: block;
         }
 
-        .no-results {
-            color: #ff0000;
-            padding: 20px;
-            text-align: left;
-            font-size: 16px;
-        }
-
         .nav-items {
             display: flex;
             gap: 10px;
@@ -281,10 +261,18 @@ try {
         .header-label strong {
             color: #000;
         }
+
+        /* Additional styles for pre tags in table cells */
+        .result-table td pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
-    <!-- Navigation Bar -->
+    <!-- Navigation Bar (same as viewAuditLog.php) -->
     <nav class="navbar">
         <div class="nav-items">
             <a href="homePageAdm.php" class="nav-item">
@@ -323,16 +311,36 @@ try {
                 <label for="searchCriteria">Search By:</label>
                 <select id="searchCriteria" onchange="toggleSearchFields()">
                     <option value="all">All</option>
-                    <option value="userID">User ID</option>
-                    <option value="fullName">Full Name</option>
-                    <option value="userType">User Type</option>
+                    <option value="tableName">Table Name</option>
                     <option value="action">Action</option>
-                    <option value="status">Status</option>
+                    <option value="userID">User ID</option>
                 </select>
 
-                <!-- UserID Dropdown -->
+                <!-- Table Name Dropdown -->
+                <div id="tableNameField" style="display: none;">
+                    <label for="tableNameSelect">Select Table:</label>
+                    <select id="tableNameSelect">
+                        <?php foreach ($tableNames as $name): ?>
+                            <option value="<?php echo htmlspecialchars($name); ?>">
+                                <?php echo htmlspecialchars($name); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <!-- Action Dropdown -->
+                <div id="actionField" style="display: none;">
+                    <label for="actionSelect">Select Action:</label>
+                    <select id="actionSelect">
+                        <option value="INSERT">INSERT</option>
+                        <option value="UPDATE">UPDATE</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+
+                <!-- User ID Dropdown -->
                 <div id="userIDField" style="display: none;">
-                    <label for="userIDSelect">Select...</label>
+                    <label for="userIDSelect">Select User ID:</label>
                     <select id="userIDSelect">
                         <?php foreach ($userIDs as $id): ?>
                             <option value="<?php echo htmlspecialchars($id); ?>">
@@ -342,74 +350,15 @@ try {
                     </select>
                 </div>
 
-                <!-- Full Name Field -->
-                <div id="fullNameField" style="display: none;">
-                    <label for="fullNameInput">Full Name:</label>
-                    <input type="text" id="fullNameInput">
-                </div>
-
-                <!-- User Type Radio Buttons -->
-                <div id="userTypeField" style="display: none;">
-                    <label>Select User Type:</label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" id="passenger" name="userType" value="PASSENGER">
-                            <label for="passenger">Passenger</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" id="driver" name="userType" value="DRIVER">
-                            <label for="driver">Driver</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" id="admin" name="userType" value="ADMIN">
-                            <label for="admin">Admin</label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Action Radio Buttons -->
-                <div id="actionField" style="display: none;">
-                    <label>Select Action:</label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" id="login" name="action" value="LOGIN">
-                            <label for="login">Login</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" id="logout" name="action" value="LOGOUT">
-                            <label for="logout">Logout</label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Status Radio Buttons -->
-                <div id="statusField" style="display: none;">
-                    <label>Select Status:</label>
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" id="success" name="status" value="SUCCESS">
-                            <label for="success">Success</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" id="failedDeactivated" name="status" value="FAILED - ACCOUNT DEACTIVATED">
-                            <label for="failedDeactivated">Failed - Account Deactivated</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" id="failed" name="status" value="FAILED">
-                            <label for="failed">Failed</label>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="button" onclick="searchLogs()">Search</button>
+                <button class="button" onclick="searchTrails()">Search</button>
             </div>
         </div>
 
         <!-- Right Section -->
         <div class="right-section">
-            <h2 class="section-title">Audit Log Records</h2>
-            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 15px;">
-                <div id="totalLogs"></div>
+            <h2 class="section-title">Audit Trail Records</h2>
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 20px;">
+                <div id="totalTrails" style="font-size: 16px; font-weight: bold;">Total trails: 0</div>
                 <button onclick="generateReport()" class="generate-report-btn">
                     <i class="fas fa-file-pdf"></i>
                     Generate Report
@@ -417,32 +366,29 @@ try {
             </div>
             <div class="header-label" style="margin-bottom: 20px;">
                 <strong>Sort by:</strong>
-                <span onclick="toggleSortOrder('LogID')" style="cursor: pointer;">Log ID <i class="fas fa-sort"></i></span> |
+                <span onclick="toggleSortOrder('TrailID')" style="cursor: pointer;">Trail ID <i class="fas fa-sort"></i></span> |
+                <span onclick="toggleSortOrder('RecordID')" style="cursor: pointer;">Record ID <i class="fas fa-sort"></i></span> |
                 <span onclick="toggleSortOrder('UserID')" style="cursor: pointer;">User ID <i class="fas fa-sort"></i></span> |
                 <span onclick="toggleSortOrder('FullName')" style="cursor: pointer;">Full Name <i class="fas fa-sort"></i></span>
             </div>
             <div id="resultContainer">
-                <div id="noResults">No matching records found</div>
+                <div id="noResults" class="no-results">Results not found</div>
             </div>
         </div>
     </div>
 
     <script>
-        let originalLogData = [];
-        let currentSortField = 'UserID';
-        let currentSortOrder = 'asc';
+        let originalTrailData = [];
         let sortOrder = 'asc';
-        let sortCriterion = 'LogID';
+        let sortCriterion = 'TrailID';
 
         function toggleSearchFields() {
             const criteria = document.getElementById('searchCriteria').value;
             
             // Hide all fields first
-            document.getElementById('userIDField').style.display = 'none';
-            document.getElementById('fullNameField').style.display = 'none';
-            document.getElementById('userTypeField').style.display = 'none';
+            document.getElementById('tableNameField').style.display = 'none';
             document.getElementById('actionField').style.display = 'none';
-            document.getElementById('statusField').style.display = 'none';
+            document.getElementById('userIDField').style.display = 'none';
             
             // Show the selected field
             if (criteria !== 'all') {
@@ -450,32 +396,25 @@ try {
             }
         }
 
-        function searchLogs() {
+        function searchTrails() {
             const criteria = document.getElementById('searchCriteria').value;
             const data = { criteria };
             
             switch (criteria) {
+                case 'tableName':
+                    data.tableName = document.getElementById('tableNameSelect').value;
+                    break;
+                case 'action':
+                    data.action = document.getElementById('actionSelect').value;
+                    break;
                 case 'userID':
                     data.userID = document.getElementById('userIDSelect').value;
                     break;
-                case 'fullName':
-                    data.fullName = document.getElementById('fullNameInput').value;
-                    break;
-                case 'userType':
-                    const selectedType = document.querySelector('input[name="userType"]:checked');
-                    if (selectedType) data.userType = selectedType.value;
-                    break;
-                case 'action':
-                    const selectedAction = document.querySelector('input[name="action"]:checked');
-                    if (selectedAction) data.action = selectedAction.value;
-                    break;
-                case 'status':
-                    const selectedStatus = document.querySelector('input[name="status"]:checked');
-                    if (selectedStatus) data.status = selectedStatus.value;
-                    break;
             }
 
-            fetch('fetchAuditLogs.php', {
+            console.log('Sending request with data:', data); // Add debugging
+
+            fetch('fetchAuditTrails.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -484,62 +423,65 @@ try {
             })
             .then(response => response.json())
             .then(data => {
+                console.log('Received response:', data); // Add debugging
                 if (data.error) {
                     alert(data.error);
                     return;
                 }
                 
-                originalLogData = data;
-                renderLogs(data);
+                originalTrailData = data;
+                renderTrails(data);
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while fetching the logs');
+                alert('An error occurred while fetching the trails');
             });
         }
 
-        function renderLogs(logs) {
+        function renderTrails(trails) {
             const container = document.getElementById('resultContainer');
-            const noResults = document.getElementById('noResults');
             const generateReportBtn = document.querySelector('.generate-report-btn');
+            const totalTrailsDiv = document.getElementById('totalTrails');
             
-            if (!logs || !Array.isArray(logs) || logs.length === 0) {
-                document.getElementById('totalLogs').innerHTML = '<strong>Total logs: 0</strong>';
+            console.log('Rendering trails:', trails); // Add debugging
+            
+            if (!trails || !Array.isArray(trails) || trails.length === 0) {
+                totalTrailsDiv.textContent = 'Total trails: 0';
                 container.innerHTML = '<p class="no-results">Results not found</p>';
                 generateReportBtn.style.display = 'none';
                 return;
             }
             
-            document.getElementById('totalLogs').innerHTML = `<strong>Total logs: ${logs.length}</strong>`;
+            totalTrailsDiv.textContent = `Total trails: ${trails.length}`;
             generateReportBtn.style.display = 'flex';
 
             let tableHTML = `
                 <table class="result-table">
                     <tr>
-                        <th onclick="sortLogs('LogID')">Log ID</th>
-                        <th onclick="sortLogs('UserID')">User ID</th>
-                        <th onclick="sortLogs('FullName')">Full Name</th>
-                        <th onclick="sortLogs('UserTypeForLog')">User Type</th>
-                        <th onclick="sortLogs('Action')">Action</th>
-                        <th onclick="sortLogs('Status')">Status</th>
-                        <th onclick="sortLogs('IPAddress')">IP Address</th>
-                        <th onclick="sortLogs('DeviceInfo')">Device Info</th>
-                        <th onclick="sortLogs('TimeStamp')">Timestamp</th>
+                        <th>No</th>
+                        <th onclick="toggleSortOrder('TrailID')">Trail ID</th>
+                        <th onclick="toggleSortOrder('TableName')">Table Name</th>
+                        <th onclick="toggleSortOrder('RecordID')">Record ID</th>
+                        <th onclick="toggleSortOrder('UserID')">User ID</th>
+                        <th onclick="toggleSortOrder('FullName')">Full Name</th>
+                        <th>Old Data</th>
+                        <th>New Data</th>
+                        <th onclick="toggleSortOrder('TimeStamp')">Timestamp</th>
                     </tr>
             `;
 
-            logs.forEach(log => {
-                const timestamp = new Date(log.TimeStamp).toLocaleString('en-GB');
+            trails.forEach((trail, index) => {
+                const timestamp = new Date(trail.TimeStamp).toLocaleString('en-GB');
                 tableHTML += `
                     <tr>
-                        <td>${log.LogID}</td>
-                        <td>${log.UserID}</td>
-                        <td>${log.FullName ? log.FullName.toUpperCase() : '-'}</td>
-                        <td>${log.UserTypeForLog}</td>
-                        <td>${log.Action}</td>
-                        <td>${log.Status}</td>
-                        <td>${log.IPAddress}</td>
-                        <td>${log.DeviceInfo}</td>
+                        <td>${index + 1}</td>
+                        <td>${trail.TrailID}</td>
+                        <td>${trail.TableName}</td>
+                        <td>${trail.RecordID}</td>
+                        <td>${trail.UserID || '-'}</td>
+                        <td>${(trail.FullName || '-').toUpperCase()}</td>
+                        <td><pre>${trail.OldData || '-'}</pre></td>
+                        <td><pre>${trail.NewData || '-'}</pre></td>
                         <td>${timestamp}</td>
                     </tr>
                 `;
@@ -556,11 +498,11 @@ try {
                 sortCriterion = criterion;
                 sortOrder = 'asc';
             }
-            sortLogs(criterion);
+            sortTrails(criterion);
         }
 
-        function sortLogs(field) {
-            const sortedData = [...originalLogData].sort((a, b) => {
+        function sortTrails(field) {
+            const sortedData = [...originalTrailData].sort((a, b) => {
                 let valueA = a[field] || '';
                 let valueB = b[field] || '';
 
@@ -577,7 +519,7 @@ try {
                 return 0;
             });
 
-            renderLogs(sortedData);
+            renderTrails(sortedData);
         }
 
         function generateReport() {
@@ -588,22 +530,21 @@ try {
             const currentData = [...document.querySelectorAll('.result-table tr')]
                 .slice(1) // Skip header row
                 .map(row => ({
-                    LogID: row.cells[0].textContent,
-                    UserID: row.cells[1].textContent,
-                    FullName: row.cells[2].textContent.toUpperCase(),
-                    UserTypeForLog: row.cells[3].textContent,
-                    Action: row.cells[4].textContent,
-                    Status: row.cells[5].textContent,
-                    IPAddress: row.cells[6].textContent,
-                    DeviceInfo: row.cells[7].textContent,
-                    TimeStamp: row.cells[8].textContent
+                    No: row.cells[0].textContent,
+                    TrailID: row.cells[1].textContent,
+                    TableName: row.cells[2].textContent,
+                    RecordID: row.cells[3].textContent,
+                    UserID: row.cells[4].textContent,
+                    OldData: row.cells[5].textContent,
+                    NewData: row.cells[6].textContent,
+                    TimeStamp: row.cells[7].textContent
                 }));
 
             printWindow.document.write(`
                 <!DOCTYPE html>
                 <html>
                 <head>
-                    <title>Audit Log Report</title>
+                    <title>Audit Trail Report</title>
                     <style>
                         body { font-family: Arial, sans-serif; }
                         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -611,6 +552,7 @@ try {
                         th { background-color: #4caf50; color: white; }
                         tr:nth-child(even) { background-color: #f9f9f9; }
                         .report-header { margin-bottom: 20px; }
+                        pre { margin: 0; white-space: pre-wrap; }
                         @media print {
                             th { 
                                 background-color: #4caf50 !important;
@@ -623,35 +565,31 @@ try {
                 </head>
                 <body>
                     <div class="report-header">
-                        <h2>Audit Log Report</h2>
+                        <h2>Audit Trail Report</h2>
                         <p>Generated on: ${new Date().toLocaleString()}</p>
-                        <p>Total Logs: ${currentData.length}</p>
+                        <p>Total Trails: ${currentData.length}</p>
                     </div>
                     <table>
                         <tr>
                             <th>No</th>
-                            <th>Log ID</th>
+                            <th>Trail ID</th>
+                            <th>Table Name</th>
+                            <th>Record ID</th>
                             <th>User ID</th>
-                            <th>Full Name</th>
-                            <th>User Type</th>
-                            <th>Action</th>
-                            <th>Status</th>
-                            <th>IP Address</th>
-                            <th>Device Info</th>
+                            <th>Old Data</th>
+                            <th>New Data</th>
                             <th>Timestamp</th>
                         </tr>
-                        ${currentData.map((log, index) => `
+                        ${currentData.map((trail, index) => `
                             <tr>
                                 <td>${index + 1}</td>
-                                <td>${log.LogID}</td>
-                                <td>${log.UserID}</td>
-                                <td>${log.FullName}</td>
-                                <td>${log.UserTypeForLog}</td>
-                                <td>${log.Action}</td>
-                                <td>${log.Status}</td>
-                                <td>${log.IPAddress}</td>
-                                <td>${log.DeviceInfo}</td>
-                                <td>${log.TimeStamp}</td>
+                                <td>${trail.TrailID}</td>
+                                <td>${trail.TableName}</td>
+                                <td>${trail.RecordID}</td>
+                                <td>${trail.UserID}</td>
+                                <td><pre>${trail.OldData}</pre></td>
+                                <td><pre>${trail.NewData}</pre></td>
+                                <td>${trail.TimeStamp}</td>
                             </tr>
                         `).join('')}
                     </table>
@@ -665,9 +603,10 @@ try {
             };
         }
 
-        // Initial search for all logs when page loads
+        // Initial search for all trails when page loads
         document.addEventListener('DOMContentLoaded', () => {
-            searchLogs();
+            console.log('Page loaded, initiating search'); // Add debugging
+            searchTrails();
         });
     </script>
 </body>
